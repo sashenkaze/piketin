@@ -2,8 +2,9 @@ const Validator = require("fastest-validator");
 const v = new Validator();
 const { User } = require('../models')
 const { response } = require('../helpers/response.formatter')
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const passwordHash = require('password-hash')
+const exceljs = require('exceljs')
 
 module.exports = {
     createUser: async (req, res) => {
@@ -162,6 +163,45 @@ module.exports = {
                 where: {id: id}
             });
             return res.status(200).json(response(200, "deleted"));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+    //! untuk export data akun murid sbg admin ke excel
+    exportUsers: async (req, res) => {
+        try {
+            const users = await User.findAll({
+                where: { role: 'murid' },
+                attributes: { exclude: ['password'] }
+            });
+
+            //! exceljs.Workbook() : bawaan package exceljs utk membuat file excel baru di memory
+            // 1 workbook = 1 file
+            const workbook = new exceljs.Workbook();
+
+            //! addWorksheet() : menambah sheet/tab baru di dalam file excel
+            const sheet = workbook.addWorksheet('Daftar Murid'); // parameter Daftar Murid hanya untuk nama sheet yg akan muncul nanti
+
+            //! sheet.columns : bawaan exceljs utk define kolom header excel
+            sheet.columns = [
+                { header: 'ID', key: 'id', width: 10 },
+                { header: 'Nama', key: 'name', width: 25 },
+                { header: 'NIS', key: 'nis', width: 20 },
+                { header: 'Email', key: 'email', width: 30 },
+                { header: 'Jadwal Piket', key: 'jadwal_piket', width: 15 },
+            ]
+
+            //! addRow() : menambah 1 baris data ke sheet
+            // key di sheet.columns dicocokin ke key object yang dilempar ke addRow()
+            // toJSON() : ubah sequelize instance ke plain object dulu sebelum dimasukkan
+            users.forEach(user => sheet.addRow(user.toJSON()));
+
+            // setHeader : response supaya browser/postman tau ini tuh file excel
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=daftar-murid.xlsx');
+
+            await workbook.xlsx.write(res);
+            res.end();
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
         }
