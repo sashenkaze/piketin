@@ -211,7 +211,7 @@ module.exports = {
         }
     },
     //! untuk export data submission murid sbg admin ke excel
-    exportSubmission: async (req, res) => {
+    exportSubmissions: async (req, res) => {
         try {
         const submissions = await Submission.findAll({
             include: [
