@@ -193,14 +193,22 @@ module.exports = {
 
             //! addRow() : menambah 1 baris data ke sheet
             // key di sheet.columns dicocokin ke key object yang dilempar ke addRow()
-            // toJSON() : ubah sequelize instance ke plain object dulu sebelum dimasukkan
+            // toJSON() : ubah sequelize instance ke json dulu sebelum dimasukkan
             users.forEach(user => sheet.addRow(user.toJSON()));
 
-            // setHeader : response supaya browser/postman tau ini tuh file excel
+            //! setHeader : response supaya browser/postman tau ini tuh file excel dan bukan json
+            // Content-Type : memberitahu tipe file yang dikirim berupa format excel
+            // Content-Disposition : memberitahu browser untuk download file, bukan tampilkan di layar
+            // 'attachment' = download, filename = nama file hasil download
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', 'attachment; filename=daftar-murid.xlsx');
 
+            //! workbook.xlsx.write(res) : tulis isi file excel lgsg ke response HTTP
+            // res di sini sbg tempat tujuan stream file dr exceljs td
             await workbook.xlsx.write(res);
+
+            //! res.end() : tanda buat response selesai dikirim. wajib dipanggil setelah write() karena write() ga otomatis nutup response
+            // tanpa ini, koneksi HTTP tidak pernah ditutup dan file tidak selesai terdownload
             res.end();
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
