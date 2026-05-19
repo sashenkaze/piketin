@@ -13,6 +13,8 @@ router.post('/', checkToken, checkRole('murid'), upload.fields([
 ]), submissionController.createSubmission)
 router.get('/', checkToken, checkRole('admin'), submissionController.getAllSubmissions)
 router.get('/my', checkToken, checkRole('murid'), submissionController.getMySubmission)
+//! route export data semua submission dr semua murid
+router.get('/export', checkToken, checkRole('admin'), submissionController.exportSubmissions)
 router.put('/:id/status', checkToken, checkRole('admin'), upload.none(), submissionController.updateStatus)
 
 module.exports = router
