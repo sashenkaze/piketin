@@ -246,8 +246,8 @@ module.exports = {
         submissions.forEach(sub => {
             const s = sub.toJSON();
 
-            //! addRow dengan object manual karena data ini dr relasi User & JenisPekerjaan
-            // tidak bisa langsung di pass. perlu diambil dari nested object dulu
+            //! addRow dgn object manual karena data ini dr relasi User & JenisPekerjaan, bukan data dr tabel tunggal
+            // data tdk bisa langsung di pass ke excel, perlu diambil dari nested object dulu
             // s.User?.name : optional chaining (?.). jd kalau s.User null/undefined, tidak error, di return undefined
             sheet.addRow({
                 id: s.id,
