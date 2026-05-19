@@ -209,5 +209,74 @@ module.exports = {
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
         }
+    },
+    //! untuk export data submission murid sbg admin ke excel
+    exportSubmission: async (req, res) => {
+        try {
+        const submissions = await Submission.findAll({
+            include: [
+                { model: User, attributes: ['name', 'nis'] },
+                { model: JenisPekerjaan, attributes: ['nama_pekerjaan'] }
+            ],
+
+            order: [['createdAt', 'DESC']]
+        });
+
+        //! exceljs.Workbook() : bawaan package exceljs utk membuat file excel baru di memory
+            // 1 workbook = 1 file
+        const workbook = new exceljs.Workbook();
+        
+        //! addWorksheet() : menambah sheet/tab baru di dalam file excel
+        const sheet = workbook.addWorksheet('Histori Submission');
+
+        //! addRow() : menambah 1 baris data ke sheet
+        // key di sheet.columns dicocokin ke key object yang dilempar ke addRow()
+        // toJSON() : ubah sequelize instance ke json dulu sebelum dimasukkan
+        sheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Nama Murid', key: 'nama', width: 25 },
+            { header: 'NIS', key: 'nis', width: 20 },
+            { header: 'Tanggal Piket', key: 'tanggal_piket', width: 20 },
+            { header: 'Status Piket', key: 'status_piket', width: 15 },
+            { header: 'Kondisi', key: 'kondisi', width: 20 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Alasan Decline', key: 'alasan_decline', width: 30 },
+        ];
+
+        submissions.forEach(sub => {
+            const s = sub.toJSON();
+
+            //! addRow dengan object manual karena data ini dr relasi User & JenisPekerjaan
+            // tidak bisa langsung di pass. perlu diambil dari nested object dulu
+            // s.User?.name : optional chaining (?.). jd kalau s.User null/undefined, tidak error, di return undefined
+            sheet.addRow({
+                id: s.id,
+                nama: s.User?.name,
+                nis: s.User?.nis,
+                tanggal_piket: s.tanggal_piket,
+                status_piket: s.status_piket,
+                kondisi: s.kondisi,
+                status: s.status,
+                alasan_decline: s.alasan_decline || '-',
+            });
+        });
+
+        //! setHeader : response supaya browser/postman tau ini tuh file excel dan bukan json
+        // Content-Type : memberitahu tipe file yang dikirim berupa format excel
+        // Content-Disposition : memberitahu browser untuk download file, bukan tampilkan di layar
+        // 'attachment' = download, filename = nama file hasil download
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=histori-submission.xlsx');
+
+        //! workbook.xlsx.write(res) : tulis isi file excel lgsg ke response HTTP
+        // res di sini sbg tempat tujuan stream file dr exceljs td
+        await workbook.xlsx.write(res);
+
+        //! res.end() : tanda buat response selesai dikirim. wajib dipanggil setelah write() karena write() ga otomatis nutup response
+        // tanpa ini, koneksi HTTP tidak pernah ditutup dan file tidak selesai terdownload
+        res.end();
+    } catch (error) {
+        return res.status(500).json(response(500, "Server Error", error.message));
+    }
     }
 }
