@@ -8,10 +8,10 @@ module.exports = {
       {
         name: 'PS Rayon',
         nis: null,
-        email: 'admin@gmail.com',
-        role: 'admin',
+        email: 'psrayon@gmail.com',
+        role: 'psrayon',
         jadwal_piket: null,
-        password: passwordHash.generate('admin123'),
+        password: passwordHash.generate('psrayon123'),
         createdAt: new Date(),
         updatedAt: new Date(),
       }

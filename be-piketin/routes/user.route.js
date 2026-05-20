@@ -7,12 +7,12 @@ const upload = require('../middlewares/upload')
 
 const exceljs = require('exceljs')
 
-router.post('/', checkToken, checkRole('admin'), upload.none(), userController.createUser)
-router.get('/', checkToken, checkRole('admin'), userController.getAllUsers)
+router.post('/', checkToken, checkRole('psrayon'), upload.none(), userController.createUser)
+router.get('/', checkToken, checkRole('psrayon'), userController.getAllUsers)
 //! route export data user (murid)
-router.get('/export', checkToken, checkRole('admin'), userController.exportUsers) 
-router.get('/:id', checkToken, checkRole('admin'), userController.getUserById)
-router.put('/:id', checkToken, checkRole('admin'), upload.none(), userController.updateUser)
-router.delete('/:id', checkToken, checkRole('admin'), userController.deleteUser)
+router.get('/export', checkToken, checkRole('psrayon'), userController.exportUsers) 
+router.get('/:id', checkToken, checkRole('psrayon'), userController.getUserById)
+router.put('/:id', checkToken, checkRole('psrayon'), upload.none(), userController.updateUser)
+router.delete('/:id', checkToken, checkRole('psrayon'), userController.deleteUser)
 
 module.exports = router

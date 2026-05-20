@@ -11,10 +11,10 @@ router.post('/', checkToken, checkRole('murid'), upload.fields([
     { name: 'foto_sebelum', maxCount: 1 },
     { name: 'foto_sesudah', maxCount: 1 },
 ]), submissionController.createSubmission)
-router.get('/', checkToken, checkRole('admin'), submissionController.getAllSubmissions)
+router.get('/', checkToken, checkRole('psrayon'), submissionController.getAllSubmissions)
 router.get('/my', checkToken, checkRole('murid'), submissionController.getMySubmission)
 //! route export data semua submission dr semua murid
-router.get('/export', checkToken, checkRole('admin'), submissionController.exportSubmissions)
-router.put('/:id/status', checkToken, checkRole('admin'), upload.none(), submissionController.updateStatus)
+router.get('/export', checkToken, checkRole('psrayon'), submissionController.exportSubmissions)
+router.put('/:id/status', checkToken, checkRole('psrayon'), upload.none(), submissionController.updateStatus)
 
 module.exports = router

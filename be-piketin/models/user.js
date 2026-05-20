@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     nis: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    role: DataTypes.ENUM('admin', 'murid'),
+    role: DataTypes.ENUM('psrayon', 'murid'),
     jadwal_piket: DataTypes.ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat')
   }, {
     sequelize,

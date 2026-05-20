@@ -167,7 +167,7 @@ module.exports = {
             return res.status(500).json(response(500, "Server Error", error.message));
         }
     },
-    //! untuk export data akun murid sbg admin ke excel
+    //! untuk export data akun murid sbg psrayon ke excel
     exportUsers: async (req, res) => {
         try {
             const users = await User.findAll({

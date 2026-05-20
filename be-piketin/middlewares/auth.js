@@ -22,7 +22,7 @@ module.exports = {
         }
     },
 
-    // cek role admin/user(murid). dipanggil setelah checkToken 
+    // cek role psrayon/user(murid). dipanggil setelah checkToken 
     checkRole: (role) => {
         return (req, res, next) => {
             // kalau role user yg login gak sesuai dengan role yg diizinkan, kasih response 403 dan sebaliknya

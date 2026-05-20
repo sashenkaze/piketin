@@ -170,7 +170,7 @@ module.exports = {
     updateStatus: async (req, res) => {
         try {
             const { id } = req.params;
-            const { action, alasan_decline } = req.body; // action: admin melakukan accept atau decline submission murid
+            const { action, alasan_decline } = req.body; // action: psrayon melakukan accept atau decline submission murid
 
             const submission = await Submission.findByPk(id);
             if (!submission) {
@@ -182,7 +182,7 @@ module.exports = {
                 return res.status(400).json(response(400, "Submission sudah diproses sebelumnya"));
             }
 
-            //! tentukan status baru berdasarkan action dari admin
+            //! tentukan status baru berdasarkan action dari psrayon
             let newStatus;
             if (action === 'accept') {
                 newStatus = 'Accepted';
@@ -211,7 +211,7 @@ module.exports = {
             return res.status(500).json(response(500, "Server Error", error.message));
         }
     },
-    //! untuk export data submission murid sbg admin ke excel
+    //! untuk export data submission murid sbg psrayon ke excel
     exportSubmissions: async (req, res) => {
         try {
         const submissions = await Submission.findAll({
