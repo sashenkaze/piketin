@@ -8,6 +8,10 @@ const loginRoute = require('./routes/login.route')
 const userRoute = require('./routes/user.route')
 const jenisPekerjaanRoute = require('./routes/jenispekerjaan.route')
 const submissionRoute = require('./routes/submission.route')
+//! 
+const rayonRoute = require('./routes/rayon.route')
+const manageUsersRoute = require('./routes/manage-users.route')
+const piketWcRoute = require('./routes/piket-wc.route')
 
 db.sequelize.authenticate()
     .then(() => console.log("p(≧ O ≦)p ---- DATABASE SUDAH TERSAMBUNG! ---- q(≧ O ≦)q"))
@@ -25,6 +29,10 @@ app.use('/', loginRoute)
 app.use('/users', userRoute)
 app.use('/jenis-pekerjaan', jenisPekerjaanRoute)
 app.use('/submissions', submissionRoute)
+//!
+app.use('/rayons', rayonRoute)
+app.use('/manage-users', manageUsersRoute)
+app.use('/piket-wc', piketWcRoute) 
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
