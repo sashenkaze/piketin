@@ -43,7 +43,8 @@ module.exports = {
                 email: data.email,
                 password: passwordHash.generate(data.password),
                 role: 'murid',
-                jadwal_piket: data.jadwal_piket
+                jadwal_piket: data.jadwal_piket,
+                rayon_id: req.user.rayon_id,
             });
             const { password: _, ...userData } = user.toJSON();
             //! password dipisah (direname jadi _ lalu diabaikan)
@@ -69,6 +70,8 @@ module.exports = {
                 },
                 // cari berdasarkan field name di db dari name req.query
                 where: name ? {
+                    role: 'murid',
+                    rayon_id: req.user.rayon_id,
                     name: {
                         [Op.like]: `%${name}%` // mencari yg mirip
                     } 
@@ -141,7 +144,8 @@ module.exports = {
                 name: data.name,
                 nis: data.nis,
                 email: data.email,
-                jadwal_piket: data.jadwal_piket
+                jadwal_piket: data.jadwal_piket,
+                rayon_id: req.user.rayon_id,
             });
             const newUser = await User.findByPk(id, {
                 attributes: { exclude: ['password'] }
@@ -171,7 +175,10 @@ module.exports = {
     exportUsers: async (req, res) => {
         try {
             const users = await User.findAll({
-                where: { role: 'murid' },
+                where: { 
+                    role: 'murid',
+                    rayon_id: req.user.rayon_id
+                },
                 attributes: { exclude: ['password'] }
             });
 
