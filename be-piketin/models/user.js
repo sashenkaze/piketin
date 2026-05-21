@@ -12,15 +12,24 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       User.hasMany(models.Submission, { foreignKey: 'user_id' });
+      //! baru
+      User.belongsTo(models.Rayon, { foreignKey: 'rayon_id'});
+      User.hasMany(models.SubmissionWc, { foreignKey: 'user_id' });
+      //! self-ref: sbg petugas kokurikuler yg review
+      User.hasMany(models.SubmissionWc, { foreignKey: 'reviewed_by', as: 'ReviewedSubmissions' });
     }
   }
   User.init({
+    rayon_id: DataTypes.BIGINT,
     name: DataTypes.STRING,
     nis: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    role: DataTypes.ENUM('psrayon', 'murid'),
-    jadwal_piket: DataTypes.ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat')
+    role: DataTypes.ENUM('administrator', 'psrayon', 'kokurikuler', 'murid'),
+    jadwal_piket: DataTypes.ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'),
+    minggu_ke: DataTypes.TINYINT,
+    hari_wc: DataTypes.ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'),
+    tugas_wc: DataTypes.ENUM('A', 'B')
   }, {
     sequelize,
     modelName: 'User',
