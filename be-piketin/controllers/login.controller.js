@@ -38,7 +38,7 @@ module.exports = {
             }
 
             // jika validasi berhasil, buat token jwt
-            const token = jwt.sign({userId: user.id, email: user.email, name: user.name, role: user.role }, auth_secret);
+            const token = jwt.sign({userId: user.id, email: user.email, name: user.name, role: user.role, rayon_id: user.rayon_id }, auth_secret);
             if (!token) {
                 return res.status(400).json(response(400, "Validasi Error", "Login failed"));
             }
