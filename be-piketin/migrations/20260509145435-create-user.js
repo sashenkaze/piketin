@@ -22,7 +22,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       role: {
-        type: Sequelize.ENUM('psrayon', 'murid'),
+        type: Sequelize.ENUM('administrator', 'psrayon', 'kokurikuler', 'murid'),
         allowNull: false,
       },
       jadwal_piket: {

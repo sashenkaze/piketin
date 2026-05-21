@@ -20,11 +20,6 @@ module.exports = {
       type: Sequelize.ENUM('A', 'B'),
       allowNull: true,
     });
-    // update column lama
-    await queryInterface.changeColumn('Users', 'role', {
-      type: Sequelize.ENUM('administrators', 'psrayon', 'kokurikuler', 'murid'),
-      allowNull: false,
-    });
   },
 
   async down (queryInterface, Sequelize) {
