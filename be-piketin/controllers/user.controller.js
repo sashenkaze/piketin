@@ -69,17 +69,14 @@ module.exports = {
                     exclude: ['password'] //! sembunyikan password dri output
                 },
                 // cari berdasarkan field name di db dari name req.query
-                where: name ? {
+                where: {
                     role: 'murid',
                     rayon_id: req.user.rayon_id,
-                    name: {
-                        [Op.like]: `%${name}%` // mencari yg mirip
-                    } 
-                } : {}, // cari berdasarkan field name di db dari name req.query
+                    //! filter name hanya kalau ada, digabung ke where utama
+                    ...(name ? { name: { [Op.like]: `%${name}%` } } : {})
+                },
                 // kl di params postman ada sortBy dan order, jalanin pengurutan, kl gk ada pake default, misal sortBy 'stock' order 'DESC'
-                order: sortBy && order ? [
-                    [sortBy, order] 
-                ] : [],
+                order: sortBy && order ? [[sortBy, order]] : [],
                 offset: Number(offset),
                 limit: Number(limit),
             });
