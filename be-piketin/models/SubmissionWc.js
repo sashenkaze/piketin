@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      SubmissionWc.belongsTo(models.User, { foreignKey: 'user_id' });
+      SubmissionWc.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
       // as: harus sama dengan yang di User.hasMany di atas
       SubmissionWc.belongsTo(models.User, { foreignKey: 'reviewed_by', as: 'Reviewer' });
     }
