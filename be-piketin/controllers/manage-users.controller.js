@@ -16,7 +16,7 @@ module.exports = {
                 email: {type: "string"},
                 password: {type: "string"},
                 role: {type: "enum", values: ['psrayon', 'kokurikuler']},
-                rayon_id: {type: "number", integer: true, positive: true, optiona: true}
+                rayon_id: {type: "number", integer: true, positive: true, optional: true}
             }
             
             const data = {
