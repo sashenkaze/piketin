@@ -7,6 +7,7 @@ const { Op } = require("sequelize");
 //! helper: hitung nomor minggu dalam tahun dari tanggal tertentu
 const getWeekNumber = (date) => {
     const startOfYear = new Date(date.getFullYear(), 0, 1);
+    // 86400000: jumlah milidetik sehari (1000ms x 60s x 60m x 24h)
     return Math.ceil(((date - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
 };
 
@@ -18,13 +19,15 @@ module.exports = {
 
             //! validasi hari piket WC
             const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            // sabtu minggu ikut disertakan karena untuk menghitung 
             const hariIni = namaHari[new Date().getDay()];
             if (user.hari_wc !== hariIni) {
                 return res.status(400).json(response(400, `Bukan hari piket WC kamu. Jadwal kamu: ${user.hari_wc}`));
             }
 
-            //! validasi minggu ke- dalam siklus 4 minggu
-            //! ((mingguSekarang - 1) % 4) + 1 → hasil selalu 1, 2, 3, atau 4
+            //! validasi minggu kesekian dalam siklus 4 minggu
+            //! ((mingguSekarang - 1) % 4) + 1
+            //  hasil selalu 1, 2, 3, atau 4 dan berulang
             const mingguSekarang = getWeekNumber(new Date());
             const minggukeSiklus = ((mingguSekarang - 1) % 4) + 1;
             if (user.minggu_ke !== minggukeSiklus) {
@@ -72,6 +75,8 @@ module.exports = {
                 include: [
                     { model: User, as: 'User', attributes: { exclude: ['password'] } },
                     //! as: 'Reviewer' harus sama dengan alias di model SubmissionWc
+                    // pakai alias karena SubmissionWc punya 2 relasi ke tabel users
+                    // sequelize bingung yg mana kemana jadi pakai alias untuk kasih arahan 
                     { model: User, as: 'Reviewer', attributes: ['id', 'name'] }
                 ],
                 order: [['createdAt', 'DESC']],
