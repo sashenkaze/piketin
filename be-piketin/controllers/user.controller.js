@@ -10,7 +10,7 @@ module.exports = {
     createUser: async (req, res) => {
         try{
             // ambil input payload (req.body)
-            const { name, nis, email, password, jadwal_piket } = req.body;
+            const { name, nis, email, password, jadwal_piket, minggu_ke, hari_wc, tugas_wc } = req.body;
 
             // validasi
             const schema = {
@@ -19,7 +19,10 @@ module.exports = {
                 email: {type: "string"},
                 password: {type: "string"},
                 role: {type: "string"},
-                jadwal_piket: {type: "enum", values: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']}
+                jadwal_piket: {type: "enum", values: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']},
+                minggu_ke: { type: "number", integer: true, min: 1, max: 4 },
+                hari_wc: { type: "enum", values: ['Senin','Selasa','Rabu','Kamis','Jumat']},
+                tugas_wc: { type: "enum", values: ['A','B'] }
             }
             // menyiapkan data yg akan divalidasi
             const data = {
@@ -28,7 +31,11 @@ module.exports = {
                 email: email,
                 password: password,
                 role: 'murid',
-                jadwal_piket: jadwal_piket
+                jadwal_piket: jadwal_piket,
+                minggu_ke: Number(minggu_ke),
+                //! iseng nyoba, kl nama properti obj dan variabel sama — JS otomatis baca kek hari_wc: hari_wc 
+                hari_wc,
+                tugas_wc
             }
             const validate = v.validate(data, schema);
             if (validate.length > 0) {
