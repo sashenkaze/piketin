@@ -6,9 +6,14 @@ const { Op } = require("sequelize");
 
 //! helper: hitung nomor minggu dalam tahun dari tanggal tertentu
 const getWeekNumber = (date) => {
+    // hitungan per tahun. 1 Januari, 0 = januari di js
     const startOfYear = new Date(date.getFullYear(), 0, 1);
-    // 86400000: jumlah milidetik sehari (1000ms x 60s x 60m x 24h)
-    return Math.ceil(((date - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+    return Math.ceil((
+        (date - startOfYear) // selisih milidetik hari ini - 1 jan
+        // 86400000: jumlah milidetik sehari (1000ms x 60s x 60m x 24h)
+        / 86400000 // ubah ms ke hari
+        + startOfYear.getDay() + 1) 
+        / 7);
 };
 
 module.exports = {
