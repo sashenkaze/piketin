@@ -1,10 +1,8 @@
 const Validator = require("fastest-validator");
 const v = new Validator();
-const { User } = require('../models')
+const { User, Rayon } = require('../models')
 const { response } = require('../helpers/response.formatter')
-const { Op, where } = require("sequelize");
 const passwordHash = require('password-hash')
-const exceljs = require('exceljs')
 
 module.exports = {
     createManagedUser: async (req, res) => {
@@ -42,7 +40,7 @@ module.exports = {
             
             const { password: _, ...userData } = managedUser.toJSON();
             return res.status(201).json(response(201, "created", userData));
-        } catch {
+        } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
         }
     },
@@ -89,6 +87,7 @@ module.exports = {
             if (!user || !['psrayon', 'kokurikuler'].includes(user.role)) {
                 return res.status(400).json(response(400, "Data [id] not found"));
             }
+            return res.status(200).json(response(200, "success", user));
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
         }
