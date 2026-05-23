@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Submission, { foreignKey: 'user_id' });
       //! baru
       User.belongsTo(models.Rayon, { foreignKey: 'rayon_id'});
-      User.hasMany(models.SubmissionWc, { foreignKey: 'user_id' });
+      User.hasMany(models.SubmissionWc, { foreignKey: 'user_id', as: 'SubmissionsWc' });
       //! self-ref: sbg petugas kokurikuler yg review
       User.hasMany(models.SubmissionWc, { foreignKey: 'reviewed_by', as: 'ReviewedSubmissions' });
     }
