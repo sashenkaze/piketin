@@ -35,6 +35,12 @@ module.exports = {
                 // jika hasil validate ada error...
                 return res.status(400).json(response(400, "Validasi Error", validate));
             }
+            
+            //! validasi email tidak double
+            const existingEmail = await User.findOne({ where: { email: data.email } });
+            if (existingEmail) {
+                return res.status(400).json(response(400, "Validasi Error", "Email sudah digunakan"));
+            }
 
             // proses menyimpan data melalui ORM sequelize
             const user = await User.create({

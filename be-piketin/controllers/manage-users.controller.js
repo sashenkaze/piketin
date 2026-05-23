@@ -30,6 +30,11 @@ module.exports = {
                 return res.status(400).json(response(400, "Validasi Error", validate));
             }
             
+            const existingEmail = await User.findOne({ where: { email: data.email } });
+            if (existingEmail) {
+                return res.status(400).json(response(400, "Validasi Error", "Email sudah digunakan"));
+                }
+            
             //! psrayon wajib punya rayon id
             if (data.role === 'psrayon' && !rayon_id) {
                 return res.status(400).json(response(400, "Validasi Error", "rayon_id wajib diisi untuk role psrayon"));
