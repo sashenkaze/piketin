@@ -8,11 +8,14 @@ const { Op } = require("sequelize");
 const getWeekNumber = (date) => {
     // hitungan per tahun. 1 Januari, 0 = januari di js
     const startOfYear = new Date(date.getFullYear(), 0, 1);
+    //! Math.ceil: bulatkan keatas. Pakai ini krn per minggu dihitung dr sdh msk hari ke brp, bukan brp minggu penuh
     return Math.ceil((
         (date - startOfYear) // selisih milidetik hari ini - 1 jan
         // 86400000: jumlah milidetik sehari (1000ms x 60s x 60m x 24h)
         / 86400000 // ubah ms ke hari
-        + startOfYear.getDay() + 1) 
+        //! getDay(): mengambil nomor hari dalam seminggu 0-6 (minggu-sabtu)
+        + startOfYear.getDay() 
+        + 1) // + 1 supaya pas hari pertama di satu minggu, sdh dihitung masuk minggu baru dan tidak menunggu hari esok
         / 7);
 };
 
