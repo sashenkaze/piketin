@@ -58,6 +58,9 @@ module.exports = {
                 role: 'murid',
                 jadwal_piket: data.jadwal_piket,
                 rayon_id: req.user.rayon_id,
+                minggu_ke: data.minggu_ke,
+                hari_wc: data.hari_wc,
+                tugas_wc: data.tugas_wc,
             });
             const { password: _, ...userData } = user.toJSON();
             //! password dipisah (direname jadi _ lalu diabaikan)
@@ -163,6 +166,9 @@ module.exports = {
                 email: data.email,
                 jadwal_piket: data.jadwal_piket,
                 rayon_id: req.user.rayon_id,
+                minggu_ke: data.minggu_ke,
+                hari_wc: data.hari_wc,
+                tugas_wc: data.tugas_wc,
             });
             const newUser = await User.findByPk(id, {
                 attributes: { exclude: ['password'] }
