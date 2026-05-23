@@ -30,6 +30,11 @@ module.exports = {
                 return res.status(400).json(response(400, "Validasi Error", validate));
             }
             
+            //! psrayon wajib punya rayon id
+            if (data.role === 'psrayon' && !rayon_id) {
+                return res.status(400).json(response(400, "Validasi Error", "rayon_id wajib diisi untuk role psrayon"));
+            }
+            
             const managedUser = await User.create({
                 name: data.name,
                 email: data.email,
