@@ -128,19 +128,26 @@ module.exports = {
     updateUser: async (req, res) => {
         try {
             const { id } = req.params;
-            const { name, nis, email, password, jadwal_piket } = req.body;
+            const { name, nis, email, password, jadwal_piket, minggu_ke, hari_wc, tugas_wc } = req.body;
 
             const schema = {
                 name: {type: "string"},
                 nis: {type: "string"},
                 email: {type: "string"},
                 jadwal_piket: {type: "enum", values: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']},
+                minggu_ke: { type: "number", integer: true, min: 1, max: 4 },
+                hari_wc: { type: "enum", values: ['Senin','Selasa','Rabu','Kamis','Jumat']},
+                tugas_wc: { type: "enum", values: ['A','B'] }
             }
             const data = {
             name: name,
             nis: nis,
             email: email,
-            jadwal_piket: jadwal_piket
+            jadwal_piket: jadwal_piket,
+            minggu_ke: Number(minggu_ke),
+                //! iseng nyoba, kl nama properti obj dan variabel sama — JS otomatis baca kek hari_wc: hari_wc 
+                hari_wc,
+                tugas_wc
             }
             const validate = v.validate(data, schema);  
             if (validate.length > 0) {
