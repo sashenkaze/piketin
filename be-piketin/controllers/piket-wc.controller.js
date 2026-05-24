@@ -18,7 +18,7 @@ const getWeekNumber = (date) => {
         + 1) // + 1 supaya pas hari pertama di satu minggu, sdh dihitung masuk minggu baru dan tidak menunggu hari esok
         / 7);
 };
-// 
+
 module.exports = {
     createSubmissionWc: async (req, res) => {
         try {
