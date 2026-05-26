@@ -22,6 +22,7 @@ const getWeekNumber = (date) => {
 module.exports = {
     createSubmissionWc: async (req, res) => {
         try {
+            const { kondisi } = req.body;
             const user = await User.findByPk(req.user.userId);
             if (!user) return res.status(400).json(response(400, "User not found"));
 
