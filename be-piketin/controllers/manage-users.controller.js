@@ -3,6 +3,7 @@ const v = new Validator();
 const { User, Rayon } = require('../models')
 const { response } = require('../helpers/response.formatter')
 const passwordHash = require('password-hash')
+const { Op } = require('sequelize');
 
 module.exports = {
     createManagedUser: async (req, res) => {
