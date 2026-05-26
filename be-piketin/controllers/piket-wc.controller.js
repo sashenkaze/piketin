@@ -23,6 +23,19 @@ module.exports = {
     createSubmissionWc: async (req, res) => {
         try {
             const { kondisi } = req.body;
+
+            const schema = {
+                kondisi: { 
+                type: "enum", 
+                values: ["Bersih dan Rapi", "Bersih", "Kurang Bersih"] 
+                },
+            };
+
+            const validate = v.validate({ kondisi }, schema);
+
+            if (validate.length > 0) {
+                return res.status(400).json(response(400, "Validasi Error", validate));
+            }
             const user = await User.findByPk(req.user.userId);
             if (!user) return res.status(400).json(response(400, "User not found"));
 
@@ -65,7 +78,8 @@ module.exports = {
                 tanggal_piket: new Date().toISOString().split('T')[0],
                 //! tugas otomatis dari profil murid, bukan input manual
                 tugas: user.tugas_wc,
-                status: 'Pending'
+                kondisi: kondisi,
+                status: 'Pending',
             });
 
             return res.status(201).json(response(201, "created", submission));
