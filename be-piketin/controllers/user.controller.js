@@ -123,6 +123,9 @@ module.exports = {
             if (!user) {
                 return res.status(400).json(response(400, "Data [id] not found"));
             }
+            if (user.rayon_id !== req.user.rayon_id) {
+                return res.status(403).json(response(403, "forbidden", "You can't access students whose Rayon's different than yours!"));
+            }
             return res.status(200).json(response(200, "success", user));
         } catch(error) {
             return res.status(500).json(response(500, "Server Error", error.message));
@@ -160,6 +163,9 @@ module.exports = {
             if(!user) {
                 return res.status(400).json(response(400, 'Validasi Error', "Data not found"));
             }
+            if (user.rayon_id !== req.user.rayon_id) {
+                return res.status(403).json(response(403, "forbidden", "You can't access students whose Rayon's different than yours!"));
+            }
             const updateProcess = await user.update({
                 name: data.name,
                 nis: data.nis,
@@ -185,6 +191,9 @@ module.exports = {
             const user = await User.findByPk(id);
             if (!user) {
                 return res.status(400).json(response(400, 'Validasi Error', "Data not found"));
+            }
+            if (user.rayon_id !== req.user.rayon_id) {
+                return res.status(403).json(response(403, "forbidden", "You can't access students whose Rayon's different than yours!"));
             }
             const deleteProcess = await User.destroy({
                 where: {id: id}
