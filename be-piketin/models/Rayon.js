@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
     sequelize,
     modelName: 'Rayon',
-    // timestamps: false 
+    timestamps: false 
     });
     return Rayon;
 };
