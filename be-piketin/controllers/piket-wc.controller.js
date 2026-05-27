@@ -30,8 +30,12 @@ module.exports = {
                 values: ["Bersih dan Rapi", "Bersih", "Kurang Bersih"] 
                 },
             };
+            
+            const data = {
+                kondisi: kondisi
+            }
 
-            const validate = v.validate({ kondisi }, schema);
+            const validate = v.validate( kondisi , schema);
 
             if (validate.length > 0) {
                 return res.status(400).json(response(400, "Validasi Error", validate));
@@ -78,8 +82,8 @@ module.exports = {
                 tanggal_piket: new Date().toISOString().split('T')[0],
                 //! tugas otomatis dari profil murid, bukan input manual
                 tugas: user.tugas_wc,
-                kondisi: kondisi,
                 status: 'Pending',
+                kondisi: kondisi,
             });
 
             return res.status(201).json(response(201, "created", submission));
