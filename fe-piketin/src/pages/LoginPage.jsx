@@ -6,10 +6,10 @@ import CardComp from "../components/CardComp";
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({ email: "", password: "" }); //! simpan data login dan tambah obj kosong untuk fieldny
-    const [loading, setLoading] = useState(false); 
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         // name: ambil nama field
@@ -24,7 +24,7 @@ export default function LoginPage() {
     const handleSubmit = async (e) => {
         e.preventDefault(); //! egah refresh halaman saat event submit
         setError(""); // refresh pesan error sebelumnya
-        setLoading(true); 
+        setLoading(true);
 
         //! kirim data login ke be
         try {
@@ -38,16 +38,21 @@ export default function LoginPage() {
 
             // kl login aman
             if (res.ok) {
-                const data = await res.json(); //* ganti body str json td jd obj JS  
-                localStorage.setItem("token", data.token); // simpen token ke localstorage
-                console.log("Login berhasil:", data);
-                navigate("/");
+                const responseData = await res.json(); //* ganti body str json td jd obj JS  
+                // responseData.data: obj dalam 'data' di output postman
+                //! data: userData: alias destructuring untuk ganti nama data jadi userData
+                const { token, data: userData } = responseData.data;
+                localStorage.setItem("token", token) // simpan ke localstorage data token hasil login
+                localStorage.setItem("userData", JSON.stringify(userData)) //* ubah jd string dr obj JS
+
+                console.log("Login berhasil:", userData)
+                navigate("/dashboard")
             } else {
                 const errorData = await res.json().catch(() => ({ message: "Login gagal. Periksa email & password Anda." }));
                 // simpen error msg ke state 
                 setError(errorData.message || "Terjadi kesalahan saat login.");
             }
-        } catch (err) { //* kl error lain
+        } catch (err) { // kl error lain
             console.error("Error login:", err);
             setError(
                 "Gagal terhubung ke server. Periksa koneksi internet atau backend.",
@@ -60,16 +65,10 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
             <CardComp>
-                <h2 className="text-xl font-bold text-center mb-4 text-gray-800 dark:text-white">
-                    Login BE-PIKETIN
-                </h2>
+                <h2 className="text-xl font-bold text-center mb-4 text-gray-800 dark:text-white">Login BE-PIKETIN</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <Label
-                            htmlFor="email"
-                            value="Email"
-                            className="text-gray-700 dark:text-gray-300"
-                        />
+                        <Label htmlFor="email" value="Email" className="text-gray-700 dark:text-gray-300" />
                         <TextInput
                             id="email"
                             name="email"
@@ -78,16 +77,12 @@ export default function LoginPage() {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            disabled={loading} // Non-aktifkan input saat loading
+                            disabled={loading} //! nonaktifkan input saat loading
                         />
                     </div>
 
                     <div>
-                        <Label
-                            htmlFor="password"
-                            value="Password"
-                            className="text-gray-700 dark:text-gray-300"
-                        />
+                        <Label htmlFor="password" value="Password" className="text-gray-700 dark:text-gray-300" />
                         <TextInput
                             id="password"
                             name="password"
@@ -96,18 +91,17 @@ export default function LoginPage() {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            disabled={loading} // Non-aktifkan input saat loading
+                            disabled={loading} 
                         />
                     </div>
 
-                    {/* Tampilkan error jika ada */}
                     {error && <p className="text-red-500 text-sm">{error}</p>}
 
                     <Button
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700"
-                        disabled={loading} // Non-aktifkan tombol saat loading
-                        isProcessing={loading} // Tampilkan spinner di tombol saat loading
+                        disabled={loading}
+                        isProcessing={loading}
                     >
                         {loading ? "Memproses..." : "Login"}
                     </Button>
