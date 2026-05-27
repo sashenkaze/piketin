@@ -8,13 +8,6 @@ const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
-//! untuk nyambungin fe - be
-const cors = require('cors');
-
-app.use(cors({
-  origin: 'http://localhost:5173' // url fe
-}));
-
 
 let sequelize;
 if (config.use_env_variable) {

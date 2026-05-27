@@ -12,6 +12,12 @@ const submissionRoute = require('./routes/submission.route')
 const rayonRoute = require('./routes/rayon.route')
 const manageUsersRoute = require('./routes/manage-users.route')
 const piketWcRoute = require('./routes/piket-wc.route')
+//! untuk nyambungin fe - be
+const cors = require('cors');
+
+app.use(cors({
+  origin: 'http://localhost:5173' // url fe
+}));
 
 db.sequelize.authenticate()
     .then(() => console.log("p(≧ O ≦)p ---- DATABASE SUDAH TERSAMBUNG! ---- q(≧ O ≦)q"))
