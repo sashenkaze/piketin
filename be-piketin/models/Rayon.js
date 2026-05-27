@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
     sequelize,
     modelName: 'Rayon',
-    timestamps: false // ingat ini karena kita skip createdAt/updatedAt di migration
+    // timestamps: false 
     });
     return Rayon;
 };
