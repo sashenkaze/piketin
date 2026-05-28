@@ -46,7 +46,7 @@ export default function LoginPage() {
                 localStorage.setItem("userData", JSON.stringify(userData)) //* ubah jd string dr obj JS
 
                 console.log("Login berhasil:", userData)
-                navigate("/dashboard")
+                navigate("/")
             } else {
                 const errorData = await res.json().catch(() => ({ message: "Login gagal. Periksa email & password Anda." }));
                 // simpen error msg ke state 

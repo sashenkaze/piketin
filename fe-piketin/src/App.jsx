@@ -22,7 +22,7 @@ function App() {
 
         try {
             const parsedUserData = JSON.parse(storedUserDataString); // parse ke obj JS dr str JSON
-            setUserData(parsedUserData);
+            setUser(parsedUserData);
             console.log("UserData dari storage:", parsedUserData);
         } catch (parseError) {
             console.error("Gagal parse userData dari localStorage:", parseError);
@@ -44,15 +44,15 @@ function App() {
     }
 
     //! kl login valid, arahkan ke dashboard sesuai role
-    if (userData) {
+    if (user) {
         let dashboardContent;
         // Gunakan switch statement untuk menentukan konten berdasarkan role user
-        switch (userData.role) {
+        switch (user.role) {
             case 'murid':
                 dashboardContent = (
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Dashboard Murid</h2>
-                        <p className="text-gray-600 dark:text-gray-300">Halo, {userData.name}!</p>
+                        <p className="text-gray-600 dark:text-gray-300">Halo, {user.name}!</p>
                         <p className="text-gray-600 dark:text-gray-300">Anda dapat mengajukan absen piket harian atau piket WC di sini.</p>
                         {/* Tambahkan komponen/submenu khusus murid di sini nanti */}
                     </div>
@@ -62,8 +62,8 @@ function App() {
                 dashboardContent = (
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Dashboard Ps. Rayon</h2>
-                        <p className="text-gray-600 dark:text-gray-300">Halo, {userData.name}!</p>
-                        <p className="text-gray-600 dark:text-gray-300">Anda dapat mengelola data murid di rayon Anda ({userData.rayon_id}).</p>
+                        <p className="text-gray-600 dark:text-gray-300">Halo, {user.name}!</p>
+                        <p className="text-gray-600 dark:text-gray-300">Anda dapat mengelola data murid di rayon Anda ({user.rayon_id}).</p>
                         {/* Tambahkan komponen/submenu khusus psrayon di sini nanti */}
                     </div>
                 );
@@ -72,7 +72,7 @@ function App() {
                 dashboardContent = (
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Dashboard Kokurikuler</h2>
-                        <p className="text-gray-600 dark:text-gray-300">Halo, {userData.name}!</p>
+                        <p className="text-gray-600 dark:text-gray-300">Halo, {user.name}!</p>
                         <p className="text-gray-600 dark:text-gray-300">Anda dapat menyetujui atau menolak absen piket WC di sini.</p>
                         {/* Tambahkan komponen/submenu khusus kokurikuler di sini nanti */}
                     </div>
@@ -82,29 +82,25 @@ function App() {
                 dashboardContent = (
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Dashboard Administrator</h2>
-                        <p className="text-gray-600 dark:text-gray-300">Halo, {userData.name}!</p>
+                        <p className="text-gray-600 dark:text-gray-300">Halo, {user.name}!</p>
                         <p className="text-gray-600 dark:text-gray-300">Anda dapat mengelola akun pengguna dan rayon di sini.</p>
                         {/* Tambahkan komponen/submenu khusus admin di sini nanti */}
                     </div>
                 );
                 break;
             default:
-                // Jika role tidak dikenali, tampilkan pesan error
-                dashboardContent = <p className="text-red-500">Role tidak dikenali: {userData.role}</p>;
+                dashboardContent = <p className="text-red-500">Role tidak dikenali: {user.role}</p>;
         }
 
-        // Render layout dasar dashboard dan isi konten berdasarkan role
         return (
             <div className="container mx-auto p-4">
                 <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Dashboard BE-PIKETIN</h1>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">Selamat datang, {userData.name} (Role: {userData.role})!</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">Selamat datang, {user.name}!</p>
                 {dashboardContent}
             </div>
         );
     }
 
-    // Fallback: jika tidak loading dan userData juga tidak ada (harusnya tidak terjadi jika flow benar),
-    // tampilkan pesan error. Ini sebenarnya seharusnya tidak terjadi karena useEffect sudah handle redirect.
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
             <span className="text-lg text-red-500">Terjadi kesalahan saat memuat dashboard. Silakan login kembali.</span>
