@@ -1,10 +1,10 @@
 import { Card } from "flowbite-react"
 
-export default function CardComp({ children }) {
+export default function CardComp({ children, className = "" }) {
     return (
-        <Card className="max-w-sm">
+        <div className={`rounded-xl shadow-lg overflow-hidden ${className}`}>
             {/* naro isi konten yg make CardComp */}
             {children}
-        </Card>
+        </div>
     )
 }
