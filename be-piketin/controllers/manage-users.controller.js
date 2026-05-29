@@ -6,6 +6,40 @@ const passwordHash = require('password-hash')
 const { Op } = require('sequelize');
 
 module.exports = {
+    /**
+     * getUserStats
+     * Mengembalikan jumlah user per role: psrayon, kokurikuler, dan murid.
+     * 
+     * Endpoint  : GET /manage-users/stats
+     * Akses     : administrator only (via checkRole di route)
+     * Flow      : 
+     *   1. Jalankan 3 query COUNT paralel ke tabel User pakai Promise.all
+     *   2. Masing-masing query filter berdasarkan kolom `role`
+     *   3. Kembalikan objek { psrayon, kokurikuler, murid } sebagai data response
+     * 
+     * Kenapa Promise.all?
+     *   Supaya 3 query jalan bersamaan (paralel), bukan satu-satu (serial).
+     *   Lebih cepat karena tidak perlu nunggu query sebelumnya selesai.
+     */
+    getUserStats: async (req, res) => {
+        try {
+            // Promise.all : jalankan semua promise sekaligus, tunggu sampai semua selesai
+            // User.count({ where: { role: '...' } }) : query COUNT(*) WHERE role = '...'
+            const [psrayonCount, kokurikulerCount, muridCount] = await Promise.all([
+                User.count({ where: { role: 'psrayon' } }),
+                User.count({ where: { role: 'kokurikuler' } }),
+                User.count({ where: { role: 'murid' } }),
+            ]);
+
+            return res.status(200).json(response(200, "success", {
+                psrayon: psrayonCount,
+                kokurikuler: kokurikulerCount,
+                murid: muridCount,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
     createManagedUser: async (req, res) => {
         try {
             const { name, email, password, role, rayon_id } = req.body;

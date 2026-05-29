@@ -16,9 +16,5 @@
 }
 
 .animate-fadeIn {
-    animation: fadeIn 0.6s ease-out forwards;
-}
-
-.anim-wrapper {
-    overflow: hidden; 
+    animation: fadeIn 0.6s ease-out;
 }

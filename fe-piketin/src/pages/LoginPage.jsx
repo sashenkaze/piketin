@@ -129,7 +129,7 @@ export default function LoginPage() {
                                     id="email"
                                     name="email"
                                     type="email"
-                                    placeholder="student@email.sch"
+                                    placeholder="stude"
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
@@ -215,7 +215,7 @@ export default function LoginPage() {
                         <p className="text-sm text-gray-500 font-medium">
                             Don't have an account?{" "}
                             <text className="font-bold text-green-600 hover:text-green-800 underline underline-offset-4 decoration-2 decoration-green-100 hover:decoration-green-300 transition-all">
-                                Ask PS Rayon to create one!
+                                Ur chopped
                             </text>
                         </p>
                     </div>
