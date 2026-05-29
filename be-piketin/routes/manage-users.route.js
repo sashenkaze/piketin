@@ -5,7 +5,7 @@ const upload = require('../middlewares/upload')
 const manageUsersController = require('../controllers/manage-users.controller')
 
 //! administrator CRUD psrayon & kokurikuler
-// Route stats harus di atas /:id supaya Express tidak salah baca "stats" sebagai nilai id
+// route /stats harus di atas /:id — kalau di bawah, Express salah baca string "stats" sebagai nilai id
 router.get('/stats', checkToken, checkRole('administrator'), manageUsersController.getUserStats)
 router.post('/', checkToken, checkRole('administrator'), upload.none(), manageUsersController.createManagedUser)
 router.get('/', checkToken, checkRole('administrator'), manageUsersController.getAllManagedUsers)

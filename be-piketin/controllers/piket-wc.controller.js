@@ -20,6 +20,26 @@ const getWeekNumber = (date) => {
 };
 
 module.exports = {
+    //! endpoint baru: hitung jumlah submission WC per status untuk dashboard admin
+    // sama seperti getUserStats di manage-users — pakai Promise.all supaya 3 query jalan paralel
+    getWcStats: async (req, res) => {
+        try {
+            const [pending, accepted, declined] = await Promise.all([
+                SubmissionWc.count({ where: { status: 'Pending' } }),
+                SubmissionWc.count({ where: { status: 'Accepted' } }),
+                SubmissionWc.count({ where: { status: 'Declined' } }),
+            ]);
+
+            return res.status(200).json(response(200, "success", {
+                pending,
+                accepted,
+                declined,
+                total: pending + accepted + declined,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
     createSubmissionWc: async (req, res) => {
         try {
             const { kondisi } = req.body;
