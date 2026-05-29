@@ -64,7 +64,9 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-white p-0 lg:p-0 animate-fadeIn overflow-hidden">
+        <div className="w-full min-h-screen overflow-hidden">
+
+        <div className="min-h-screen flex items-center justify-center bg-white p-0 lg:p-0 animate-fadeIn">
 
             {/* KOLOM KIRI */}
             <div className="hidden lg:flex lg:w-1/2 relative min-h-screen overflow-hidden bg-gray-50 items-center justify-center p-12">
@@ -75,7 +77,7 @@ export default function LoginPage() {
                         backgroundImage: `radial-gradient(#c1c6d4 1px, transparent 1px)`,
                         backgroundSize: '24px 24px',
                     }}
-                ></div>
+                    ></div>
 
                 <div className="relative z-10 w-full max-w-lg aspect-square rounded-3xl overflow-hidden shadow-2xl border border-white/60 bg-white/70 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="w-full h-full rounded-2xl overflow-hidden relative group">
@@ -83,7 +85,7 @@ export default function LoginPage() {
                             alt="Modern educational environment"
                             className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
                             src="https://smkwikrama.sch.id/storage/1701159048-berita$berita.JPG"
-                        />
+                            />
                         <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent"></div>
                     </div>
                 </div>
@@ -142,7 +144,7 @@ export default function LoginPage() {
                                             }
                                         }
                                     }}
-                                />
+                                    />
                             </div>
                         </div>
 
@@ -176,7 +178,7 @@ export default function LoginPage() {
                                             }
                                         }
                                     }
-                                    }
+                                }
                                 />
                             </div>
                         </div>
@@ -187,7 +189,7 @@ export default function LoginPage() {
                                 name="remember"
                                 type="checkbox"
                                 className="w-4.5 h-4.5 border border-gray-300 rounded-md bg-white text-blue-600 focus:ring-blue-500 transition-all cursor-pointer"
-                            />
+                                />
                             <label htmlFor="remember" className="text-sm font-medium text-gray-600 cursor-pointer select-none">
                                 Remember me
                             </label>
@@ -198,7 +200,7 @@ export default function LoginPage() {
                             disabled={loading}
                             isProcessing={loading}
                             className="w-full bg-green-600 hover:bg-green-700 enabled:hover:bg-green-700 text-white font-bold rounded-xl text-sm py-2.5 transition-all active:scale-[0.98] shadow-lg shadow-green-200 flex items-center justify-center gap-2 border-none"
-                        >
+                            >
                             {!loading && (
                                 <div className="flex items-center justify-center gap-2">
                                     <span>Sign In</span>
@@ -220,6 +222,7 @@ export default function LoginPage() {
                 </CardComp>
             </div>
         </div>
+                            </div>
     );
 
 }
