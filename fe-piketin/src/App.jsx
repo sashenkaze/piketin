@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Activity, TrendingUp, Shield, Menu } from 'lucide-react';
+import { Calendar, Activity, TrendingUp, Shield, Menu, Users } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import UserStatsCards from './components/UserStatsCards';
+import PsRayonStatsCards from './components/PsRayonStatsCards';
 import PieChartCard from './components/PieChartCard';
 
 // ─── Dashboard per Role ────────────────────────────────────────────────────────
@@ -74,11 +75,6 @@ function AdminDashboard({ userStats, wcData, piketData }) {
  */
 function PlaceholderDashboard({ role }) {
     const info = {
-        psrayon: {
-            label: 'PS Rayon',
-            desc: 'Kelola data murid di rayon kamu dan lihat jadwal piket.',
-            color: 'bg-blue-50 border-blue-200 text-blue-700',
-        },
         kokurikuler: {
             label: 'Kokurikuler',
             desc: 'Review dan setujui pengajuan absen piket WC.',
@@ -99,6 +95,55 @@ function PlaceholderDashboard({ role }) {
             <p className="text-sm opacity-80">{current.desc}</p>
             <p className="text-xs mt-4 opacity-60">Fitur ini sedang dalam pengembangan.</p>
         </div>
+    );
+}
+
+// ─── PsRayonDashboard ──────────────────────────────────────────────────────────
+// dashboard khusus role psrayon — mirip admin tapi data sesuai rayon psrayon
+// Props:
+//   - psStats   : { murid, pending } dari API /users/stats
+//   - piketData : [{ name, value, color }] untuk pie chart piket hari ini
+function PsRayonDashboard({ psStats, piketData }) {
+    return (
+        <>
+            {/* 2 Kartu Statistik */}
+            <PsRayonStatsCards stats={psStats} />
+
+            {/* 2 Pie Chart — sama persis posisi dan style kayak admin */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/*
+                 * Chart kiri: Status Piket Hari Ini — murid rayon ini yang sudah/belum piket
+                 * unit="%" karena ini persentase kehadiran
+                 */}
+                <PieChartCard
+                    title="Status Piket Hari Ini"
+                    icon={TrendingUp}
+                    data={piketData}
+                    innerRadius={55}
+                    unit="%"
+                />
+                {/*
+                 * Chart kanan: Distribusi Piket — placeholder dulu
+                 * TODO: bisa diisi data mingguan nanti
+                 */}
+                <PieChartCard
+                    title="Rekap Piket Minggu Ini"
+                    icon={Users}
+                    data={piketData}
+                    innerRadius={0}
+                    unit="%"
+                />
+            </div>
+
+            {/* Recent Submission — TODO: dibangun setelah halaman submission selesai */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-dashed">
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-gray-400">Submission Terbaru</h3>
+                    <span className="text-xs text-gray-300 font-medium">— coming soon</span>
+                </div>
+                <p className="text-gray-300 text-sm">-</p>
+            </div>
+        </>
     );
 }
 
@@ -132,6 +177,13 @@ export default function App() {
         { name: 'Selesai', value: 75, color: '#22c55e' },
         { name: 'Belum', value: 25, color: '#d1d5db' },
     ];
+
+    //! state dashboard psrayon — dipisah dari admin supaya tidak campur
+    const [psStats, setPsStats] = useState(null); //* { murid, pending }
+    const [psRayonPiketData, setPsRayonPiketData] = useState([
+        { name: 'Sudah Piket', value: 0, color: '#22c55e' },
+        { name: 'Belum Piket', value: 100, color: '#d1d5db' },
+    ]);
 
     /**
      * useEffect #1 — Proteksi Route & Auth Check.
@@ -196,7 +248,6 @@ export default function App() {
                 const token = localStorage.getItem("token");
 
                 //! headers yang sama dipakai untuk semua fetch
-                // Backend baca req.header("Authorization") secara mentah (tanpa strip "Bearer ")
                 // Jadi token dikirim langsung tanpa prefix — sesuai cara checkToken di auth.js
                 const headers = { Authorization: token };
 
@@ -229,6 +280,49 @@ export default function App() {
         fetchDashboardData();
     }, [user]); //* dependency: user — jalankan ulang kalau user berubah
 
+    //! useEffect #3 — fetch data dashboard psrayon
+    // hanya jalan kalau user sudah ada dan role psrayon
+    useEffect(() => {
+        if (!user || user.role !== 'psrayon') return;
+
+        const fetchPsRayonData = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: token };
+
+                //! Promise.all: fetch stats dan piket-stats paralel
+                const [statsRes, piketRes] = await Promise.all([
+                    fetch("http://localhost:3000/users/stats", { headers }),
+                    fetch("http://localhost:3000/users/piket-stats", { headers }),
+                ]);
+
+                if (!statsRes.ok) throw new Error(`ps stats HTTP ${statsRes.status}`);
+                if (!piketRes.ok) throw new Error(`piket stats HTTP ${piketRes.status}`);
+
+                const statsJson = await statsRes.json();
+                const piketJson = await piketRes.json();
+
+                //* update 2 kartu statistik psrayon
+                setPsStats(statsJson.data);
+
+                //* hitung persentase untuk pie chart
+                // kalau total 0 (belum ada murid), tampilkan 0% supaya chart tidak crash
+                const total = piketJson.data.total || 1;
+                const pctSudah = Math.round((piketJson.data.sudah_piket / total) * 100);
+                const pctBelum = 100 - pctSudah;
+
+                setPsRayonPiketData([
+                    { name: 'Sudah Piket', value: pctSudah, color: '#22c55e' },
+                    { name: 'Belum Piket', value: pctBelum, color: '#d1d5db' },
+                ]);
+            } catch (err) {
+                console.error("Gagal fetch psrayon dashboard data:", err);
+            }
+        };
+
+        fetchPsRayonData();
+    }, [user]); //* dependency: user — jalan setelah user terisi
+
     //* tampilkan spinner selama auth check berjalan
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -253,17 +347,24 @@ export default function App() {
                         piketData={piketData}
                     />
                 );
+            case 'psrayon':
+                return (
+                    <PsRayonDashboard
+                        psStats={psStats}
+                        piketData={psRayonPiketData}
+                    />
+                );
             default:
-                //* psrayon, kokurikuler, murid → placeholder dulu
+                //* kokurikuler, murid → placeholder dulu
                 return <PlaceholderDashboard role={user?.role} />;
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen bg-gray-50 flex overflow-hidden">
             <Sidebar user={user} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-            <main className="flex-1 md:ml-64 p-4 md:p-8">
+            <main className="flex-1 md:ml-64 p-4 md:p-8 animate-fadeIn">
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">

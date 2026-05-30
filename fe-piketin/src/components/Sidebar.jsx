@@ -26,13 +26,24 @@ export default function Sidebar({ user, isOpen, setIsOpen }) {
         navigate("/login");
     };
 
-    // Item menu navigasi
-    const menuItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    // Item menu navigasi — disesuaikan per role
+    // admin: manage users & rayon
+    // psrayon: manage murid & submission rayon
+    const adminMenuItems = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
         { name: 'Manage PS Rayon', icon: Users, path: '/manage-psrayon' },
         { name: 'Manage Kokurikuler', icon: Shield, path: '/manage-kokurikuler' },
-        { name: 'Manage Murid', icon: GraduationCap, path: '/manage-murid' },
+        { name: 'Manage Rayon', icon: GraduationCap, path: '/manage-rayon' },
     ];
+
+    const psRayonMenuItems = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { name: 'Manage Murid', icon: GraduationCap, path: '/manage-murid' },
+        { name: 'Submission Piket', icon: Shield, path: '/submission-piket' },
+    ];
+
+    //! pilih menu sesuai role — kalau bukan psrayon, default ke admin menu
+    const menuItems = user?.role === 'psrayon' ? psRayonMenuItems : adminMenuItems;
 
     return (
         <>
@@ -76,8 +87,8 @@ export default function Sidebar({ user, isOpen, setIsOpen }) {
                                     if (setIsOpen) setIsOpen(false);
                                 }}
                                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200
-                  ${isActive
+                    w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200
+                    ${isActive
                                         ? 'bg-green-600 text-white shadow-md shadow-green-100'
                                         : 'text-gray-500 hover:bg-green-50 hover:text-green-600'
                                     }

@@ -78,17 +78,22 @@ module.exports = {
     },
     getAllManagedUsers: async (req, res) => {
         try {
-            const { name, sortBy, order, page, limit } = req.query;
+            const { name, sortBy, order, page, limit, role } = req.query;
             
             const offset = (Number(page)-1) * Number(limit);
+
+            //! kalau ada query param role, filter by role itu. kalau gak ada, tampilkan psrayon & kokurikuler
+            const allowedRoles = ['psrayon', 'kokurikuler'];
+            const roleFilter = role && allowedRoles.includes(role)
+                ? role
+                : { [Op.in]: allowedRoles };
             
             const { count, rows } = await User.findAndCountAll({
                 attributes: {
                     exclude: ['password'] //! sembunyikan password dri output
                 },
                 where: {
-                    //! Op.in : filter value where dr array ini
-                    role: { [Op.in]: ['psrayon', 'kokurikuler']},
+                    role: roleFilter,
                     ...(name ? { name: { [Op.like]: `%${name}%` } } : {})
                 },
                 include: [{ model: Rayon }], // tampilkan data rayon untuk [srayon]

@@ -1,12 +1,77 @@
 const Validator = require("fastest-validator");
 const v = new Validator();
-const { User } = require('../models')
+const { User, Submission } = require('../models')
 const { response } = require('../helpers/response.formatter')
 const { Op, where } = require("sequelize");
 const passwordHash = require('password-hash')
 const exceljs = require('exceljs')
 
 module.exports = {
+    //! stats untuk dashboard psrayon
+    // endpoint: GET /users/stats
+    // return: jumlah murid di rayon ini + jumlah submission pending hari ini
+    getUserStats: async (req, res) => {
+        try {
+            const rayonId = req.user.rayon_id;
+            const tanggalHariIni = new Date().toISOString().split('T')[0];
+
+            //! Promise.all: 2 query jalan paralel, lebih efisien dari serial
+            const [muridCount, pendingCount] = await Promise.all([
+                // hitung murid di rayon psrayon ini
+                User.count({ where: { role: 'murid', rayon_id: rayonId } }),
+                // hitung submission pending hari ini dari murid rayon ini
+                Submission.count({
+                    where: { status: 'Pending', tanggal_piket: tanggalHariIni },
+                    include: [{
+                        model: User,
+                        where: { rayon_id: rayonId },
+                        attributes: []
+                    }]
+                })
+            ]);
+
+            return res.status(200).json(response(200, "success", {
+                murid: muridCount,
+                pending: pendingCount,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
+    //! stats piket hari ini untuk pie chart dashboard psrayon
+    // endpoint: GET /users/piket-stats
+    // return: { sudah_piket, belum_piket, total } — murid di rayon ini hari ini
+    getPiketStats: async (req, res) => {
+        try {
+            const rayonId = req.user.rayon_id;
+            const tanggalHariIni = new Date().toISOString().split('T')[0];
+
+            //! ambil semua murid di rayon ini
+            const totalMurid = await User.count({ where: { role: 'murid', rayon_id: rayonId } });
+
+            //! hitung murid yang sudah submit Accepted hari ini
+            const sudahPiket = await Submission.count({
+                where: { status: 'Accepted', tanggal_piket: tanggalHariIni },
+                include: [{
+                    model: User,
+                    where: { rayon_id: rayonId },
+                    attributes: []
+                }]
+            });
+
+            const belumPiket = totalMurid - sudahPiket;
+
+            return res.status(200).json(response(200, "success", {
+                sudah_piket: sudahPiket,
+                belum_piket: belumPiket < 0 ? 0 : belumPiket,
+                total: totalMurid,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
     createUser: async (req, res) => {
         try{
             // ambil input payload (req.body)
