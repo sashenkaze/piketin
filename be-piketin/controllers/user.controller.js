@@ -269,6 +269,7 @@ module.exports = {
         }
     },
     //! untuk export data akun murid sbg psrayon ke excel
+    // kolom: id, nama, nis, email, jadwal piket, minggu ke, hari wc, tugas wc
     exportUsers: async (req, res) => {
         try {
             const users = await User.findAll({
@@ -279,40 +280,26 @@ module.exports = {
                 attributes: { exclude: ['password'] }
             });
 
-            //! exceljs.Workbook() : bawaan package exceljs utk membuat file excel baru di memory
-            // 1 workbook = 1 file
             const workbook = new exceljs.Workbook();
+            const sheet = workbook.addWorksheet('Daftar Murid');
 
-            //! addWorksheet() : menambah sheet/tab baru di dalam file excel
-            const sheet = workbook.addWorksheet('Daftar Murid'); // parameter Daftar Murid hanya untuk nama sheet yg akan muncul nanti
-
-            //! sheet.columns : bawaan exceljs utk define kolom header excel
+            //! tambah kolom minggu_ke, hari_wc, tugas_wc dibanding versi lama
             sheet.columns = [
                 { header: 'ID', key: 'id', width: 10 },
                 { header: 'Nama', key: 'name', width: 25 },
                 { header: 'NIS', key: 'nis', width: 20 },
                 { header: 'Email', key: 'email', width: 30 },
                 { header: 'Jadwal Piket', key: 'jadwal_piket', width: 15 },
-            ]
+                { header: 'Minggu Ke', key: 'minggu_ke', width: 12 },
+                { header: 'Hari WC', key: 'hari_wc', width: 15 },
+                { header: 'Tugas WC', key: 'tugas_wc', width: 12 },
+            ];
 
-            //! addRow() : menambah 1 baris data ke sheet
-            // key di sheet.columns dicocokin ke key object yang dilempar ke addRow()
-            // toJSON() : ubah sequelize instance ke json dulu sebelum dimasukkan
             users.forEach(user => sheet.addRow(user.toJSON()));
 
-            //! setHeader : response supaya browser/postman tau ini tuh file excel dan bukan json
-            // Content-Type : memberitahu tipe file yang dikirim berupa format excel
-            // Content-Disposition : memberitahu browser untuk download file, bukan tampilkan di layar
-            // 'attachment' = download, filename = nama file hasil download
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', 'attachment; filename=daftar-murid.xlsx');
-
-            //! workbook.xlsx.write(res) : tulis isi file excel lgsg ke response HTTP
-            // res di sini sbg tempat tujuan stream file dr exceljs td
             await workbook.xlsx.write(res);
-
-            //! res.end() : tanda buat response selesai dikirim. wajib dipanggil setelah write() karena write() ga otomatis nutup response
-            // tanpa ini, koneksi HTTP tidak pernah ditutup dan file tidak selesai terdownload
             res.end();
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));

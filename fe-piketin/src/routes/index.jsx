@@ -5,6 +5,7 @@ import LoginPage from "../pages/LoginPage";
 import ManagePsRayon from "../pages/ManagePsRayon";
 import ManageRayon from "../pages/ManageRayon";
 import ManageKokurikuler from "../pages/ManageKokurikuler";
+import ManageMurid from "../pages/ManageMurid";
 
 // membuat daftar routing
 export const router = createBrowserRouter([
@@ -12,7 +13,6 @@ export const router = createBrowserRouter([
         path: "/",
         element: <Template />,
         children: [
-            // Route untuk halaman login
             {
                 path: "/", 
                 element: <App />,
@@ -32,6 +32,10 @@ export const router = createBrowserRouter([
             {
                 path: "/manage-kokurikuler",
                 element: <ManageKokurikuler />
+            },
+            {
+                path: "/manage-murid",
+                element: <ManageMurid />
             }
         ],
     },

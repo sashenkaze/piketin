@@ -9,7 +9,8 @@ import {
   MoreVertical,
   UserPlus,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import UserTable from '../components/UserTable';
@@ -43,6 +44,7 @@ export default function ManagePsRayon() {
 
   // Ambil user data untuk sidebar (fallback if context/localStorage is empty)
   const [currentUser, setCurrentUser] = useState(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("userData");
@@ -91,6 +93,31 @@ export default function ManagePsRayon() {
     e.preventDefault();
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchUsers();
+  };
+
+  //! export excel daftar psrayon saja — endpoint: GET /manage-users/export?role=psrayon
+  const handleExport = async () => {
+    setExportLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch('http://localhost:3000/manage-users/export?role=psrayon', {
+        headers: { Authorization: token }
+      });
+      if (!res.ok) throw new Error("Gagal export");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'daftar-psrayon.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Gagal mengexport data");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   /**
@@ -161,13 +188,23 @@ export default function ManagePsRayon() {
             <p className="text-gray-500 mt-1">Kelola akun PS Rayon yang terdaftar di sistem.</p>
           </div>
 
-          <button
-            onClick={() => { setSelectedUser(null); setIsFormModalOpen(true); }}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all active:scale-95 self-start md:self-center"
-          >
-            <UserPlus size={20} strokeWidth={2.5} />
-            Tambah PS Rayon
-          </button>
+          <div className="flex items-center gap-3 self-start md:self-center">
+            <button
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-bold border border-gray-200 shadow-sm transition-all active:scale-95 disabled:opacity-60"
+            >
+              {exportLoading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+              Export Excel
+            </button>
+            <button
+              onClick={() => { setSelectedUser(null); setIsFormModalOpen(true); }}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all active:scale-95"
+            >
+              <UserPlus size={20} strokeWidth={2.5} />
+              Tambah PS Rayon
+            </button>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}

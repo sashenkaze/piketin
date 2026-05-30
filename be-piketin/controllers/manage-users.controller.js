@@ -4,6 +4,7 @@ const { User, Rayon } = require('../models')
 const { response } = require('../helpers/response.formatter')
 const passwordHash = require('password-hash')
 const { Op } = require('sequelize');
+const exceljs = require('exceljs');
 
 module.exports = {
     //! endpoint baru: hitung jumlah user per role untuk dashboard admin
@@ -174,6 +175,91 @@ module.exports = {
             }
             await User.destroy({ where: { id } });
             return res.status(200).json(response(200, "deleted"));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
+    //! export daftar psrayon & kokurikuler ke excel — untuk admin
+    // query param role opsional: kalau ada, filter by role. kalau tidak ada, export semua
+    // kolom: id, nama, email, role, nama rayon (kalau psrayon)
+    exportManagedUsers: async (req, res) => {
+        try {
+            const { role } = req.query;
+
+            //! filter by role kalau ada query param, kalau tidak export semua
+            const allowedRoles = ['psrayon', 'kokurikuler'];
+            const whereRole = role && allowedRoles.includes(role)
+                ? role
+                : { [Op.in]: allowedRoles };
+
+            const users = await User.findAll({
+                where: { role: whereRole },
+                attributes: { exclude: ['password'] },
+                include: [{ model: Rayon }],
+                order: [['role', 'ASC'], ['name', 'ASC']]
+            });
+
+            //! nama file dan sheet menyesuaikan role yang diexport
+            const sheetName = role === 'psrayon' ? 'Daftar PS Rayon'
+                : role === 'kokurikuler' ? 'Daftar Kokurikuler'
+                : 'Daftar PS Rayon & Kokurikuler';
+            const fileName = role === 'psrayon' ? 'daftar-psrayon.xlsx'
+                : role === 'kokurikuler' ? 'daftar-kokurikuler.xlsx'
+                : 'daftar-managed-users.xlsx';
+
+            const workbook = new exceljs.Workbook();
+            const sheet = workbook.addWorksheet(sheetName);
+
+            sheet.columns = [
+                { header: 'ID', key: 'id', width: 10 },
+                { header: 'Nama', key: 'name', width: 25 },
+                { header: 'Email', key: 'email', width: 30 },
+                { header: 'Role', key: 'role', width: 15 },
+                { header: 'Nama Rayon', key: 'nama_rayon', width: 25 },
+            ];
+
+            //! data dari relasi Rayon tidak bisa langsung di-addRow — perlu diambil manual
+            users.forEach(user => {
+                const u = user.toJSON();
+                sheet.addRow({
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    role: u.role,
+                    nama_rayon: u.Rayon?.nama_rayon || '-', //* kokurikuler tidak punya rayon
+                });
+            });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+            await workbook.xlsx.write(res);
+            res.end();
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
+    //! export daftar rayon ke excel — untuk admin
+    // kolom: id, nama rayon
+    exportRayons: async (req, res) => {
+        try {
+            const rayons = await Rayon.findAll({ order: [['id', 'ASC']] });
+
+            const workbook = new exceljs.Workbook();
+            const sheet = workbook.addWorksheet('Daftar Rayon');
+
+            sheet.columns = [
+                { header: 'ID', key: 'id', width: 10 },
+                { header: 'Nama Rayon', key: 'nama_rayon', width: 30 },
+            ];
+
+            rayons.forEach(rayon => sheet.addRow(rayon.toJSON()));
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=daftar-rayon.xlsx');
+            await workbook.xlsx.write(res);
+            res.end();
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
         }

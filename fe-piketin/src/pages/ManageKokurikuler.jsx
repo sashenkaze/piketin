@@ -5,7 +5,8 @@ import {
     ChevronRight,
     UserPlus,
     Loader2,
-    AlertCircle
+    AlertCircle,
+    Download
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import UserTable from '../components/UserTable';
@@ -38,6 +39,7 @@ export default function ManageKokurikuler() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [exportLoading, setExportLoading] = useState(false);
 
     //* ambil userData dari localStorage buat sidebar
     useEffect(() => {
@@ -84,6 +86,31 @@ export default function ManageKokurikuler() {
         e.preventDefault();
         setPagination(prev => ({ ...prev, page: 1 }));
         fetchUsers();
+    };
+
+    //! export excel daftar kokurikuler saja — endpoint: GET /manage-users/export?role=kokurikuler
+    const handleExport = async () => {
+        setExportLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch('http://localhost:3000/manage-users/export?role=kokurikuler', {
+                headers: { Authorization: token }
+            });
+            if (!res.ok) throw new Error("Gagal export");
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'daftar-kokurikuler.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            alert("Gagal mengexport data");
+        } finally {
+            setExportLoading(false);
+        }
     };
 
     //! hapus user kokurikuler
@@ -158,13 +185,23 @@ export default function ManageKokurikuler() {
                         <p className="text-gray-500 mt-1">Kelola akun Kokurikuler yang terdaftar di sistem.</p>
                     </div>
 
-                    <button
-                        onClick={() => { setSelectedUser(null); setIsFormModalOpen(true); }}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all active:scale-95 self-start md:self-center"
-                    >
-                        <UserPlus size={20} strokeWidth={2.5} />
-                        Tambah Kokurikuler
-                    </button>
+                    <div className="flex items-center gap-3 self-start md:self-center">
+                        <button
+                            onClick={handleExport}
+                            disabled={exportLoading}
+                            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-bold border border-gray-200 shadow-sm transition-all active:scale-95 disabled:opacity-60"
+                        >
+                            {exportLoading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                            Export Excel
+                        </button>
+                        <button
+                            onClick={() => { setSelectedUser(null); setIsFormModalOpen(true); }}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all active:scale-95"
+                        >
+                            <UserPlus size={20} strokeWidth={2.5} />
+                            Tambah Kokurikuler
+                        </button>
+                    </div>
                 </div>
 
                 {/* Search Bar */}
