@@ -23,10 +23,12 @@ module.exports = {
     },
 
     // cek role psrayon/user(murid). dipanggil setelah checkToken 
+    // bisa terima string tunggal atau array role — kalau array, cek apakah role user ada di dalamnya
     checkRole: (role) => {
         return (req, res, next) => {
             // kalau role user yg login gak sesuai dengan role yg diizinkan, kasih response 403 dan sebaliknya
-            if (req.user.role !== role) {
+            const allowed = Array.isArray(role) ? role : [role];
+            if (!allowed.includes(req.user.role)) {
                 return res.status(403).json(response(403, "forbidden", "Access denied!"));
             }
             next();

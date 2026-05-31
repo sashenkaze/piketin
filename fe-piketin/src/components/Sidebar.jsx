@@ -7,7 +7,10 @@ import {
     GraduationCap,
     LogOut,
     X,
-    School
+    School,
+    ClipboardList,
+    Droplets,
+    Briefcase
 } from 'lucide-react';
 
 /**
@@ -39,11 +42,21 @@ export default function Sidebar({ user, isOpen, setIsOpen }) {
     const psRayonMenuItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
         { name: 'Manage Murid', icon: GraduationCap, path: '/manage-murid' },
+        { name: 'Jenis Pekerjaan', icon: Briefcase, path: '/jenis-pekerjaan' },
         { name: 'Submission Piket', icon: Shield, path: '/submission-piket' },
     ];
 
-    //! pilih menu sesuai role — kalau bukan psrayon, default ke admin menu
-    const menuItems = user?.role === 'psrayon' ? psRayonMenuItems : adminMenuItems;
+    //* menu murid — absen piket rayon dan absen piket wc
+    const muridMenuItems = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { name: 'Absen Piket Rayon', icon: ClipboardList, path: '/absen-rayon' },
+        { name: 'Absen Piket WC', icon: Droplets, path: '/absen-wc' },
+    ];
+
+    //! pilih menu sesuai role
+    const menuItems = user?.role === 'psrayon' ? psRayonMenuItems
+        : user?.role === 'murid' ? muridMenuItems
+        : adminMenuItems;
 
     return (
         <>

@@ -6,6 +6,33 @@ const { Op } = require("sequelize");
 const exceljs = require('exceljs')
 
 module.exports = {
+    //! stats piket rayon hari ini — untuk pie chart dashboard admin
+    // endpoint: GET /submissions/piket-stats
+    // return: { sudah_piket, belum_piket, total } — semua murid, bukan per rayon
+    getPiketRayonStats: async (req, res) => {
+        try {
+            const tanggalHariIni = new Date().toISOString().split('T')[0];
+
+            //! hitung total semua murid di sistem
+            const totalMurid = await User.count({ where: { role: 'murid' } });
+
+            //! hitung murid yang sudah Accepted hari ini (semua rayon)
+            const sudahPiket = await Submission.count({
+                where: { status: 'Accepted', tanggal_piket: tanggalHariIni }
+            });
+
+            const belumPiket = totalMurid - sudahPiket;
+
+            return res.status(200).json(response(200, "success", {
+                sudah_piket: sudahPiket,
+                belum_piket: belumPiket < 0 ? 0 : belumPiket,
+                total: totalMurid,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
     createSubmission: async (req, res) => {
         //! transaction dimulai sebelum try, karena kalau gagal di tengah harus rollback
         //! sequelize.transaction() : membuat "sesi" query. semua query di dalamnya harus sukses semua atau batal semua

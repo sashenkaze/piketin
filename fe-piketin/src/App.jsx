@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Activity, TrendingUp, Shield, Menu, Users } from 'lucide-react';
+import { Calendar, Activity, TrendingUp, Shield, Menu, Users, ClipboardList, Droplets, ArrowRight } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import UserStatsCards from './components/UserStatsCards';
 import PsRayonStatsCards from './components/PsRayonStatsCards';
@@ -80,11 +80,6 @@ function PlaceholderDashboard({ role }) {
             desc: 'Review dan setujui pengajuan absen piket WC.',
             color: 'bg-purple-50 border-purple-200 text-purple-700',
         },
-        murid: {
-            label: 'Murid',
-            desc: 'Ajukan absen piket harian atau piket WC kamu di sini.',
-            color: 'bg-orange-50 border-orange-200 text-orange-700',
-        },
     };
 
     const current = info[role] ?? { label: role, desc: 'Dashboard sedang dalam pengembangan.', color: 'bg-gray-50 border-gray-200 text-gray-700' };
@@ -98,7 +93,116 @@ function PlaceholderDashboard({ role }) {
     );
 }
 
-// ─── PsRayonDashboard ──────────────────────────────────────────────────────────
+// ─── MuridDashboard ───────────────────────────────────────────────────────────
+// dashboard khusus role murid
+// Props:
+//   - user: objek user dari localStorage (punya jadwal_piket, hari_wc, minggu_ke)
+// Logic:
+//   - cek apakah hari ini = jadwal_piket → tampilkan tombol quick access ke /absen-rayon
+//   - cek apakah hari ini = hari_wc → tampilkan tombol quick access ke /absen-wc
+//   - kalau bukan hari ini, tampilkan info jadwal saja tanpa tombol
+function MuridDashboard({ user, onNavigate }) {
+    const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const hariIni = namaHari[new Date().getDay()];
+
+    //! hitung minggu ke berapa sekarang dalam siklus 4 minggu
+    // sama persis dengan logika di piket-wc.controller.js
+    const getWeekNumber = (date) => {
+        const startOfYear = new Date(date.getFullYear(), 0, 1);
+        return Math.ceil(((date - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+    };
+    const mingguSekarang = getWeekNumber(new Date());
+    const minggukeSiklus = ((mingguSekarang - 1) % 4) + 1; //* siklus 1-4 berulang
+
+    const isHariPiketRayon = hariIni === user?.jadwal_piket;
+    const isHariPiketWc = hariIni === user?.hari_wc && minggukeSiklus === user?.minggu_ke;
+
+    return (
+        <>
+            {/* 2 Kartu Jadwal — piket rayon & piket WC */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {/* ── Card Piket Rayon ── */}
+                <div
+                    onClick={() => isHariPiketRayon && onNavigate('/absen-rayon')}
+                    className={`bg-white rounded-2xl p-6 shadow-sm border transition-all relative overflow-hidden group
+                        ${isHariPiketRayon
+                            ? 'border-green-200 hover:shadow-md hover:-translate-y-1 cursor-pointer'
+                            : 'border-gray-200 cursor-default'
+                        }`}
+                >
+                    {/* ikon dekoratif latar belakang */}
+                    <ClipboardList className="absolute -right-4 -bottom-4 text-gray-900 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity" size={120} />
+
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p className="text-gray-500 text-sm font-medium mb-1">Jadwal Piket Rayon</p>
+                            <h3 className="text-3xl font-bold text-gray-900">{user?.jadwal_piket || '—'}</h3>
+                        </div>
+                        <div className={`p-3 rounded-xl transition-colors ${isHariPiketRayon ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+                            <ClipboardList size={24} />
+                        </div>
+                    </div>
+
+                    {/* kalau hari ini jadwal piket, tampilkan tombol quick access */}
+                    {isHariPiketRayon ? (
+                        <div className="flex items-center gap-2 text-green-600 font-bold text-sm relative z-10">
+                            <span>Hari ini jadwal piket kamu — Absen sekarang</span>
+                            <ArrowRight size={16} />
+                        </div>
+                    ) : (
+                        <p className="text-gray-400 text-sm relative z-10">Bukan hari piket rayon kamu hari ini</p>
+                    )}
+                </div>
+
+                {/* ── Card Piket WC ── */}
+                <div
+                    onClick={() => isHariPiketWc && onNavigate('/absen-wc')}
+                    className={`bg-white rounded-2xl p-6 shadow-sm border transition-all relative overflow-hidden group
+                        ${isHariPiketWc
+                            ? 'border-blue-200 hover:shadow-md hover:-translate-y-1 cursor-pointer'
+                            : 'border-gray-200 cursor-default'
+                        }`}
+                >
+                    {/* ikon dekoratif latar belakang */}
+                    <Droplets className="absolute -right-4 -bottom-4 text-gray-900 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity" size={120} />
+
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p className="text-gray-500 text-sm font-medium mb-1">Jadwal Piket WC</p>
+                            <h3 className="text-3xl font-bold text-gray-900">{user?.hari_wc || '—'}</h3>
+                            {/* info minggu ke berapa */}
+                            <p className="text-xs text-gray-400 mt-1">
+                                Minggu ke-{user?.minggu_ke} dalam siklus &nbsp;·&nbsp; Sekarang minggu ke-{minggukeSiklus}
+                            </p>
+                        </div>
+                        <div className={`p-3 rounded-xl transition-colors ${isHariPiketWc ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-400'}`}>
+                            <Droplets size={24} />
+                        </div>
+                    </div>
+
+                    {/* kalau hari ini jadwal piket WC, tampilkan tombol quick access */}
+                    {isHariPiketWc ? (
+                        <div className="flex items-center gap-2 text-blue-600 font-bold text-sm relative z-10">
+                            <span>Hari ini jadwal piket WC kamu — Absen sekarang</span>
+                            <ArrowRight size={16} />
+                        </div>
+                    ) : (
+                        <p className="text-gray-400 text-sm relative z-10">Bukan hari piket WC kamu hari ini</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Info tambahan — coming soon */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-dashed">
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-gray-400">Riwayat Absen</h3>
+                    <span className="text-xs text-gray-300 font-medium">— coming soon</span>
+                </div>
+                <p className="text-gray-300 text-sm">-</p>
+            </div>
+        </>
+    );
+}
 // dashboard khusus role psrayon — mirip admin tapi data sesuai rayon psrayon
 // Props:
 //   - psStats   : { murid, pending } dari API /users/stats
@@ -171,12 +275,12 @@ export default function App() {
         { name: 'Declined', value: 0, color: '#ef4444' },
     ]);
 
-    //* piketData masih static (persentase) — belum ada endpoint untuk ini
-    // unit="%" di PieChartCard supaya tooltip tampilkan "75%" bukan "75"
-    const piketData = [
-        { name: 'Selesai', value: 75, color: '#22c55e' },
-        { name: 'Belum', value: 25, color: '#d1d5db' },
-    ];
+    //* piketData — pie chart piket rayon hari ini, semua murid
+    // nilai awal 0 supaya chart tidak crash sebelum data datang
+    const [piketData, setPiketData] = useState([
+        { name: 'Sudah Piket', value: 0, color: '#22c55e' },
+        { name: 'Belum Piket', value: 0, color: '#d1d5db' },
+    ]);
 
     //! state dashboard psrayon — dipisah dari admin supaya tidak campur
     const [psStats, setPsStats] = useState(null); //* { murid, pending }
@@ -354,8 +458,11 @@ export default function App() {
                         piketData={psRayonPiketData}
                     />
                 );
+            case 'murid':
+                //* pass navigate supaya MuridDashboard bisa redirect ke halaman absen
+                return <MuridDashboard user={user} onNavigate={navigate} />;
             default:
-                //* kokurikuler, murid → placeholder dulu
+                //* kokurikuler → placeholder dulu
                 return <PlaceholderDashboard role={user?.role} />;
         }
     };

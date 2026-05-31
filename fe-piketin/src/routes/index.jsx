@@ -6,6 +6,9 @@ import ManagePsRayon from "../pages/ManagePsRayon";
 import ManageRayon from "../pages/ManageRayon";
 import ManageKokurikuler from "../pages/ManageKokurikuler";
 import ManageMurid from "../pages/ManageMurid";
+import AbsenPiketRayon from "../pages/AbsenPiketRayon";
+import AbsenWc from "../pages/AbsenWc";
+import ManageJenisPekerjaan from "../pages/ManageJenisPekerjaan";
 
 // membuat daftar routing
 export const router = createBrowserRouter([
@@ -36,6 +39,18 @@ export const router = createBrowserRouter([
             {
                 path: "/manage-murid",
                 element: <ManageMurid />
+            },
+            {
+                path: "/absen-rayon",
+                element: <AbsenPiketRayon />
+            },
+            {
+                path: "/absen-wc",
+                element: <AbsenWc />
+            },
+            {
+                path: "/jenis-pekerjaan",
+                element: <ManageJenisPekerjaan />
             }
         ],
     },

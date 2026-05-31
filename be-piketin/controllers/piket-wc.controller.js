@@ -22,12 +22,32 @@ const getWeekNumber = (date) => {
 module.exports = {
     //! endpoint baru: hitung jumlah submission WC per status untuk dashboard admin
     // sama seperti getUserStats di manage-users — pakai Promise.all supaya 3 query jalan paralel
+    // filter: minggu ini saja (bukan semua data historis)
     getWcStats: async (req, res) => {
         try {
+            //! hitung range minggu ini: Senin s/d Minggu
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0=Minggu, 1=Senin, dst
+            //! getDay() 0=Minggu, kita mau Senin sebagai awal minggu
+            // kalau hari ini Minggu (0), mundur 6 hari. selain itu mundur (dayOfWeek - 1) hari
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() + diffToMonday);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            //! filter tanggal_piket dalam range minggu ini
+            const whereThisWeek = {
+                tanggal_piket: { [Op.between]: [startOfWeek, endOfWeek] }
+            };
+
             const [pending, accepted, declined] = await Promise.all([
-                SubmissionWc.count({ where: { status: 'Pending' } }),
-                SubmissionWc.count({ where: { status: 'Accepted' } }),
-                SubmissionWc.count({ where: { status: 'Declined' } }),
+                SubmissionWc.count({ where: { ...whereThisWeek, status: 'Pending' } }),
+                SubmissionWc.count({ where: { ...whereThisWeek, status: 'Accepted' } }),
+                SubmissionWc.count({ where: { ...whereThisWeek, status: 'Declined' } }),
             ]);
 
             return res.status(200).json(response(200, "success", {

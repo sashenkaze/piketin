@@ -13,7 +13,8 @@ router.post('/', checkToken, checkRole('murid'), upload.fields([
 ]), submissionController.createSubmission)
 router.get('/', checkToken, checkRole('psrayon'), submissionController.getAllSubmissions)
 router.get('/my', checkToken, checkRole('murid'), submissionController.getMySubmission)
-//! route export data semua submission dr semua murid
+//! route export dan stats harus di atas /:id — kalau di bawah, Express salah baca string sebagai id
+router.get('/piket-stats', checkToken, checkRole('administrator'), submissionController.getPiketRayonStats)
 router.get('/export', checkToken, checkRole('psrayon'), submissionController.exportSubmissions)
 router.put('/:id/status', checkToken, checkRole('psrayon'), upload.none(), submissionController.updateStatus)
 
