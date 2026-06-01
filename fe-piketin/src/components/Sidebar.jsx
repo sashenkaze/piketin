@@ -53,9 +53,16 @@ export default function Sidebar({ user, isOpen, setIsOpen }) {
         { name: 'Absen Piket WC', icon: Droplets, path: '/absen-wc' },
     ];
 
+    //* menu kokurikuler — dashboard + manage piket wc
+    const kokurikulerMenuItems = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { name: 'Manage Piket WC', icon: Droplets, path: '/manage-piket-wc' },
+    ];
+
     //! pilih menu sesuai role
     const menuItems = user?.role === 'psrayon' ? psRayonMenuItems
         : user?.role === 'murid' ? muridMenuItems
+        : user?.role === 'kokurikuler' ? kokurikulerMenuItems
         : adminMenuItems;
 
     return (

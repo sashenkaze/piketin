@@ -174,14 +174,14 @@ export default function ManageMurid() {
         }
     };
 
-    // search — filter di frontend berdasarkan nama
+    // search filter di fe berdasarkan nama
     const handleSearch = (e) => {
         e.preventDefault();
         setPagination(prev => ({ ...prev, page: 1 }));
         fetchMurid();
     };
 
-    //! export excel — backend kirim file langsung, bukan json
+    //! export excel. be kirim file langsung, bukan json
     // cara download: buat blob dari response, buat link sementara, klik otomatis
     const handleExport = async () => {
         setExportLoading(true);
@@ -193,10 +193,10 @@ export default function ManageMurid() {
 
             if (!res.ok) throw new Error("Gagal export");
 
-            //* ambil blob (binary data) dari response — bukan json
+            //* ambil blob (binary large object) dr response bukan json
             const blob = await res.blob();
 
-            //* buat URL sementara dari blob, lalu trigger download otomatis
+            //* buat url dari blob, lalu trigger download otomatis
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

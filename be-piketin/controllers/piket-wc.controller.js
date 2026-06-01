@@ -20,9 +20,124 @@ const getWeekNumber = (date) => {
 };
 
 module.exports = {
+
+    //! endpoint stats dashboard kokurikuler
+    // endpoint: GET /piket-wc/dashboard-stats
+    // return: { stats, murid_minggu_bukan_hari_ini, murid_hari_ini, pending_submissions }
+    getKokurikulerDashboard: async (req, res) => {
+        try {
+            const now = new Date();
+            const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const hariIni = namaHari[now.getDay()];
+
+            //! hitung minggu ke berapa sekarang dalam siklus 4 minggu
+            // sama persis dengan logika di createSubmissionWc
+            const mingguSekarang = getWeekNumber(now);
+            const minggukeSiklus = ((mingguSekarang - 1) % 4) + 1;
+
+            //! ambil semua murid
+            const semuaMurid = await User.findAll({
+                where: { role: 'murid' },
+                attributes: ['id', 'name', 'nis', 'hari_wc', 'minggu_ke', 'tugas_wc'],
+            });
+
+            //! filter murid yang terjadwal minggu ini (minggu_ke sesuai siklus sekarang)
+            const muridMingguIni = semuaMurid.filter(u => u.minggu_ke === minggukeSiklus);
+
+            //! filter murid yang terjadwal hari ini DAN minggu ini
+            const muridHariIni = muridMingguIni.filter(u => u.hari_wc === hariIni);
+
+            //! murid minggu ini tapi bukan hari ini
+            const muridMingguBukanHariIni = muridMingguIni.filter(u => u.hari_wc !== hariIni);
+
+            //! ambil submission WC yang masih Pending — perlu perhatian kokurikuler
+            const pendingSubmissions = await SubmissionWc.findAll({
+                where: { status: 'Pending' },
+                include: [{ model: User, as: 'User', attributes: ['id', 'name', 'nis'] }],
+                order: [['createdAt', 'DESC']],
+                limit: 20, //* batasi 20 supaya tidak terlalu berat
+            });
+
+            return res.status(200).json(response(200, "success", {
+                stats: {
+                    total_murid: semuaMurid.length,
+                    murid_minggu_ini: muridMingguIni.length,
+                    murid_hari_ini: muridHariIni.length,
+                },
+                murid_minggu_bukan_hari_ini: muridMingguBukanHariIni,
+                murid_hari_ini: muridHariIni,
+                pending_submissions: pendingSubmissions,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
+    //! stats piket WC minggu ini untuk chart kanan dashboard psrayon
+    // endpoint: GET /piket-wc/stats-rayon
+    // return: { sudah_wc, belum_wc, total } — murid di rayon psrayon yang terjadwal minggu ini
+    // "terjadwal minggu ini" = minggu_ke murid sesuai siklus minggu sekarang
+    // per murid hanya dihitung submission terbaru — kalau decline lalu submit ulang, tidak double-count
+    getWcStatsByRayon: async (req, res) => {
+        try {
+            const rayonId = req.user.rayon_id;
+            const now = new Date();
+
+            //! hitung siklus minggu sekarang — sama persis dengan logika createSubmissionWc
+            const mingguSekarang = getWeekNumber(now);
+            const minggukeSiklus = ((mingguSekarang - 1) % 4) + 1;
+
+            //! hitung range minggu ini: Senin s/d Minggu
+            const dayOfWeek = now.getDay();
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() + diffToMonday);
+            startOfWeek.setHours(0, 0, 0, 0);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            //! ambil murid di rayon ini yang terjadwal piket WC minggu ini
+            const muridTerjadwal = await User.findAll({
+                where: { role: 'murid', rayon_id: rayonId, minggu_ke: minggukeSiklus },
+                attributes: ['id'],
+            });
+
+            const total = muridTerjadwal.length;
+            let sudahWc = 0;
+
+            //! untuk setiap murid terjadwal, cek submission WC terbaru minggu ini
+            for (const murid of muridTerjadwal) {
+                const latest = await SubmissionWc.findOne({
+                    where: {
+                        user_id: murid.id,
+                        tanggal_piket: { [Op.between]: [startOfWeek, endOfWeek] }
+                    },
+                    order: [['createdAt', 'DESC']],
+                });
+                //* hitung sudah WC kalau Accepted atau Pending (sudah submit, menunggu review)
+                if (latest && (latest.status === 'Accepted' || latest.status === 'Pending')) {
+                    sudahWc++;
+                }
+            }
+
+            const belumWc = total - sudahWc;
+
+            return res.status(200).json(response(200, "success", {
+                sudah_wc: sudahWc,
+                belum_wc: belumWc < 0 ? 0 : belumWc,
+                total,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
     //! endpoint baru: hitung jumlah submission WC per status untuk dashboard admin
     // sama seperti getUserStats di manage-users — pakai Promise.all supaya 3 query jalan paralel
     // filter: minggu ini saja (bukan semua data historis)
+    // PENTING: per user hanya dihitung submission TERBARU — kalau decline lalu submit ulang,
+    //          yang lama (Declined) diabaikan, yang baru (Pending) yang dihitung
     getWcStats: async (req, res) => {
         try {
             //! hitung range minggu ini: Senin s/d Minggu
@@ -39,16 +154,29 @@ module.exports = {
             endOfWeek.setDate(startOfWeek.getDate() + 6);
             endOfWeek.setHours(23, 59, 59, 999);
 
-            //! filter tanggal_piket dalam range minggu ini
-            const whereThisWeek = {
-                tanggal_piket: { [Op.between]: [startOfWeek, endOfWeek] }
-            };
+            //! ambil semua murid
+            const semuaMurid = await User.findAll({
+                where: { role: 'murid' },
+                attributes: ['id'],
+            });
 
-            const [pending, accepted, declined] = await Promise.all([
-                SubmissionWc.count({ where: { ...whereThisWeek, status: 'Pending' } }),
-                SubmissionWc.count({ where: { ...whereThisWeek, status: 'Accepted' } }),
-                SubmissionWc.count({ where: { ...whereThisWeek, status: 'Declined' } }),
-            ]);
+            //! untuk setiap murid, ambil submission terbaru minggu ini
+            // ini supaya kalau decline lalu submit ulang, yang dihitung hanya yang terbaru
+            let pending = 0, accepted = 0, declined = 0;
+
+            for (const murid of semuaMurid) {
+                const latest = await SubmissionWc.findOne({
+                    where: {
+                        user_id: murid.id,
+                        tanggal_piket: { [Op.between]: [startOfWeek, endOfWeek] }
+                    },
+                    order: [['createdAt', 'DESC']], //* ambil yang paling baru
+                });
+                if (!latest) continue; //* belum submit minggu ini, skip
+                if (latest.status === 'Pending') pending++;
+                else if (latest.status === 'Accepted') accepted++;
+                else if (latest.status === 'Declined') declined++;
+            }
 
             return res.status(200).json(response(200, "success", {
                 pending,
@@ -75,7 +203,7 @@ module.exports = {
                 kondisi: kondisi
             }
 
-            const validate = v.validate( kondisi , schema);
+            const validate = v.validate( data , schema);
 
             if (validate.length > 0) {
                 return res.status(400).json(response(400, "Validasi Error", validate));
@@ -101,10 +229,18 @@ module.exports = {
             }
 
             //! cek apakah sudah submit minggu ini
-            const startOfWeek = new Date();
-            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() + diffToMonday);
+            startOfWeek.setHours(0,0,0,0);
+
             const endOfWeek = new Date(startOfWeek);
             endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23,59,59,999);
 
             const existing = await SubmissionWc.findOne({
                 where: {

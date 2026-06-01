@@ -9,6 +9,8 @@ import ManageMurid from "../pages/ManageMurid";
 import AbsenPiketRayon from "../pages/AbsenPiketRayon";
 import AbsenWc from "../pages/AbsenWc";
 import ManageJenisPekerjaan from "../pages/ManageJenisPekerjaan";
+import ManagePiketWc from "../pages/ManagePiketWc";
+import ManageSubmissionPiket from "../pages/ManageSubmissionPiket";
 
 // membuat daftar routing
 export const router = createBrowserRouter([
@@ -51,6 +53,14 @@ export const router = createBrowserRouter([
             {
                 path: "/jenis-pekerjaan",
                 element: <ManageJenisPekerjaan />
+            },
+            {
+                path: "/manage-piket-wc",
+                element: <ManagePiketWc />
+            },
+            {
+                path: "/submission-piket",
+                element: <ManageSubmissionPiket />
             }
         ],
     },

@@ -23,9 +23,7 @@ db.sequelize.authenticate()
     .then(() => console.log("p(≧ O ≦)p ---- DATABASE SUDAH TERSAMBUNG! ---- q(≧ O ≦)q"))
     .catch(err => console.log(err))
 
-
-// kelompok app.use disimpan diatas dari app.get atau listen
-// app.use : memasang middleware atau menghubungkan route ke aplikasi
+// app.use: memasang middleware atau menghubungkan route ke aplikasi
 // express.json() : middleware umum, untuk mengakses json body pada payload (postman/input)
 app.use(express.json())
 app.use(methodOverride('_method'))

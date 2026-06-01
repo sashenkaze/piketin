@@ -33,6 +33,62 @@ module.exports = {
         }
     },
 
+    //! stats piket rayon minggu ini — untuk pie chart dashboard admin (chart kanan)
+    // endpoint: GET /submissions/piket-stats-week
+    // return: { sudah_piket, belum_piket, total } — semua murid, per submission terbaru minggu ini
+    // PENTING: per user hanya dihitung submission terbaru — kalau decline lalu submit ulang,
+    //          yang lama (Declined) diabaikan, yang baru (Pending/Accepted) yang dihitung
+    getPiketRayonStatsWeek: async (req, res) => {
+        try {
+            //! hitung range minggu ini: Senin s/d Minggu
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() + diffToMonday);
+            startOfWeek.setHours(0, 0, 0, 0);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            //! ambil semua murid — filter rayon_id kalau ada (untuk psrayon), kalau tidak ada ambil semua (admin)
+            const rayonFilter = req.user.rayon_id ? { rayon_id: req.user.rayon_id } : {};
+            const semuaMurid = await User.findAll({
+                where: { role: 'murid', ...rayonFilter },
+                attributes: ['id'],
+            });
+
+            const totalMurid = semuaMurid.length;
+            let sudahPiket = 0;
+
+            //! untuk setiap murid, ambil submission terbaru minggu ini
+            // kalau decline lalu submit ulang, yang dihitung hanya yang terbaru
+            for (const murid of semuaMurid) {
+                const latest = await Submission.findOne({
+                    where: {
+                        user_id: murid.id,
+                        tanggal_piket: { [Op.between]: [startOfWeek, endOfWeek] }
+                    },
+                    order: [['createdAt', 'DESC']],
+                });
+                //! hitung sebagai sudah piket kalau Accepted atau Pending (sudah submit, menunggu)
+                if (latest && (latest.status === 'Accepted' || latest.status === 'Pending')) {
+                    sudahPiket++;
+                }
+            }
+
+            const belumPiket = totalMurid - sudahPiket;
+
+            return res.status(200).json(response(200, "success", {
+                sudah_piket: sudahPiket,
+                belum_piket: belumPiket < 0 ? 0 : belumPiket,
+                total: totalMurid,
+            }));
+        } catch (error) {
+            return res.status(500).json(response(500, "Server Error", error.message));
+        }
+    },
+
     createSubmission: async (req, res) => {
         //! transaction dimulai sebelum try, karena kalau gagal di tengah harus rollback
         //! sequelize.transaction() : membuat "sesi" query. semua query di dalamnya harus sukses semua atau batal semua
@@ -77,7 +133,7 @@ module.exports = {
                 return res.status(400).json(response(400, `Bukan jadwal piket kamu. Jadwal kamu: ${user.jadwal_piket}`));
             }
 
-            //! BARU: cek 1 submission per hari — kalau sudah ada yg Pending/Accepted hari ini, tolak
+            //! cek 1 submission per hari — kalau sudah ada yg Pending/Accepted hari ini, tolak
             //! toISOString().split('T')[0] : ambil bagian tanggal saja dari datetime → format YYYY-MM-DD
             const tanggalHariIni = new Date().toISOString().split('T')[0];
             const existingSubmission = await Submission.findOne({
@@ -95,7 +151,7 @@ module.exports = {
             const fotoSebelum = req.files['foto_sebelum'][0].filename;
             const fotoSesudah = req.files['foto_sesudah'][0].filename;
 
-            //! BARU: { transaction: t } — query ini masuk dalam sesi transaction
+            //! { transaction: t } — query ini masuk dalam sesi transaction
             //! kalau query berikutnya gagal, ini ikut di-rollback
             const submission = await Submission.create({
                 user_id: req.user.userId,
@@ -108,11 +164,11 @@ module.exports = {
                 status: 'Pending'
             }, { transaction: t });
 
-            //! BARU: pekerjaan_ids bisa array (kalau pilih banyak) atau string (kalau pilih 1)
+            //! pekerjaan_ids bisa array (kalau pilih banyak) atau string (kalau pilih 1)
             //! Array.isArray() : cek apakah sudah berbentuk array atau belum
             const ids = Array.isArray(pekerjaan_ids) ? pekerjaan_ids : [pekerjaan_ids];
 
-            //! BARU: map() — ubah array ids jadi array object siap insert
+            //! map() — ubah array ids jadi array object siap insert
             const spData = ids.map(id => ({
                 submission_id: submission.id,
                 pekerjaan_id: Number(id),
@@ -120,11 +176,11 @@ module.exports = {
                 updatedAt: new Date()
             }));
 
-            //! BARU: bulkCreate — insert banyak baris sekaligus (kebalikan dari create yg hanya 1 baris)
+            //! bulkCreate — insert banyak baris sekaligus (kebalikan dari create yg hanya 1 baris)
             //! ini bagian kedua dari transaction — kalau ini gagal, submission di atas ikut di-rollback
             await SubmissionPekerjaan.bulkCreate(spData, { transaction: t });
 
-            //! BARU: commit — tandai transaction selesai dan semua perubahan disimpan permanen
+            //! commit — tandai transaction selesai dan semua perubahan disimpan permanen
             await t.commit();
 
             // ambil hasil lengkap dengan relasi
@@ -136,7 +192,9 @@ module.exports = {
             });
             return res.status(201).json(response(201, "created", result));
         } catch(error) {
-            return res.status(500).json(response(500, "Server Error", error.message));
+            await t.rollback();
+            return res.status(500).json(response(500, "Server Error", error.message)
+            );
         }
     },
     getAllSubmissions: async (req, res) => {
