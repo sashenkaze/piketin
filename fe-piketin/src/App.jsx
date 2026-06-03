@@ -128,7 +128,7 @@ function MuridDashboard({ user, onNavigate }) {
     //! hitung minggu ke berapa sekarang dalam siklus 4 minggu
     // sama persis dengan logika di piket-wc.controller.js
     const getWeekNumber = (date) => {
-        const startOfYear = new Date(date.getFullYear(), 0, 1);
+        const startOfYear = new Date(date.getFullYear(), 6, 1);
         return Math.ceil(((date - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
     };
     const mingguSekarang = getWeekNumber(new Date());

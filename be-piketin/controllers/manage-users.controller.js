@@ -8,11 +8,9 @@ const exceljs = require('exceljs');
 
 module.exports = {
     //! endpoint baru: hitung jumlah user per role untuk dashboard admin
-    // Promise.all : jalankan semua promise secara paralel (bersamaan), bukan satu-satu
-    // artinya 3 query COUNT ini jalan sekaligus ke DB, bukan nunggu satu selesai baru query berikutnya
-    // hasilnya dikembalikan sebagai array sesuai urutan promise yang dimasukkan
     getUserStats: async (req, res) => {
         try {
+            //!  Promise.all: semua promise yg dilakuin bareng2 dan gak sendiri/berurut
             const [psrayonCount, kokurikulerCount, muridCount] = await Promise.all([
                 User.count({ where: { role: 'psrayon' } }),
                 User.count({ where: { role: 'kokurikuler' } }),
@@ -26,7 +24,7 @@ module.exports = {
             }));
         } catch (error) {
             return res.status(500).json(response(500, "Server Error", error.message));
-        }
+        }   
     },
     createManagedUser: async (req, res) => {
         try {

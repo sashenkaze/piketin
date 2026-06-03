@@ -91,7 +91,7 @@ module.exports = {
 
     createSubmission: async (req, res) => {
         //! transaction dimulai sebelum try, karena kalau gagal di tengah harus rollback
-        //! sequelize.transaction() : membuat "sesi" query. semua query di dalamnya harus sukses semua atau batal semua
+        //! sequelize.transaction() : membuat sesi query jd semua query di dalem ini harus sukses semua atau batal semua
         const t = await sequelize.transaction();
         try {
             const { status_piket, kondisi, catatan, pekerjaan_ids } = req.body;
@@ -120,7 +120,7 @@ module.exports = {
             }
 
             //! ambil data user dari jwt payload yg disimpan checktoken di req.user
-            //! req.user.userId -> di set waktu jwt.sign() di logincontroller
+            //! req.user.userId : di set waktu jwt.sign() di logincontroller
             const user = await User.findByPk(req.user.userId);
             if (!user) {
                 await t.rollback();
@@ -135,9 +135,9 @@ module.exports = {
                 return res.status(400).json(response(400, `Bukan jadwal piket kamu. Jadwal kamu: ${user.jadwal_piket}`));
             }
 
-            //! cek 1 submission per hari — kalau sudah ada yg Pending/Accepted hari ini, tolak
-            //! toISOString().split('T')[0] : ambil bagian tanggal saja dari datetime → format YYYY-MM-DD
-            const tanggalHariIni = new Date().toISOString().split('T')[0];
+            //! cek 1 submission per hari, kalau sudah ada yg Pending/Accepted hari ini, tolak
+            //! toISOString() : ambil bagian tgl saja dr datetime ke format YYYY-MM-DD
+            const tanggalHariIni = new Date().toISOString().split('T')[0]; 
             const existingSubmission = await Submission.findOne({
                 where: {
                     user_id: req.user.userId,
@@ -154,7 +154,7 @@ module.exports = {
             const fotoSebelum = req.files?.['foto_sebelum']?.[0]?.filename || null;
             const fotoSesudah = req.files?.['foto_sesudah']?.[0]?.filename || null;
 
-            //! { transaction: t } — query ini masuk dalam sesi transaction
+            //! { transaction: t } : query ini masuk dalam sesi transaction
             //! kalau query berikutnya gagal, ini ikut di-rollback
             const submission = await Submission.create({
                 user_id: req.user.userId,
@@ -171,7 +171,7 @@ module.exports = {
             //! Array.isArray() : cek apakah sudah berbentuk array atau belum
             const ids = Array.isArray(pekerjaan_ids) ? pekerjaan_ids : [pekerjaan_ids];
 
-            //! map() — ubah array ids jadi array object siap insert
+            //! map() ini ubah array ids jadi array object siap insert
             const spData = ids.map(id => ({
                 submission_id: submission.id,
                 pekerjaan_id: Number(id),
@@ -183,7 +183,7 @@ module.exports = {
             //! ini bagian kedua dari transaction — kalau ini gagal, submission di atas ikut di-rollback
             await SubmissionPekerjaan.bulkCreate(spData, { transaction: t });
 
-            //! commit — tandai transaction selesai dan semua perubahan disimpan permanen
+            //! commit, tandai transaction selesai dan semua perubahan disimpan permanen
             await t.commit();
 
             // ambil hasil lengkap dengan relasi

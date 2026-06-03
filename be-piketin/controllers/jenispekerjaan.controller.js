@@ -77,9 +77,9 @@ module.exports = {
     },
     getJpById: async (req, res) => {
         try {
-            // req.params : ambil path dinamis, /users/2. ambil angka 2 (id)
+            // req.params : ambil path dinamis, /jenis-pekerjaan/2. ambil angka 2 (id)
             const { id } = req.params;
-            // fingByPk : mencari berdasarkan primary key (id)
+            // findByPk : mencari berdasarkan primary key (id)
             const jp = await JenisPekerjaan.findByPk(id);
             // jika data yg dicari tidak ada di db (artinya angka id nya salah)
             if (!jp) {
