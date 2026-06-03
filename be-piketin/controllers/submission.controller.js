@@ -96,11 +96,13 @@ module.exports = {
         try {
             const { status_piket, kondisi, catatan, pekerjaan_ids } = req.body;
 
-            //! cek file upload.fields(). berbeda dari req.file (upload.single)
-            //! req.files['nama_field'][0] : ambil file pertama dari field tersebut
-            if (!req.files || !req.files['foto_sebelum'] || !req.files['foto_sesudah']) {
-                await t.rollback(); //! batal semua query di transaction
-                return res.status(400).json(response(400, "Validasi Error", "Foto sebelum dan sesudah wajib diupload" ));
+            //! cek file upload — hanya wajib kalau status_piket = Piket
+            //! kalau Tidak Piket, foto tidak diperlukan
+            if (status_piket === 'Piket') {
+                if (!req.files || !req.files['foto_sebelum'] || !req.files['foto_sesudah']) {
+                    await t.rollback();
+                    return res.status(400).json(response(400, "Validasi Error", "Foto sebelum dan sesudah wajib diupload" ));
+                }
             }
 
             const schema = {
@@ -148,8 +150,9 @@ module.exports = {
                 return res.status(400).json(response(400, "Kamu sudah submit absen hari ini"));
             }
 
-            const fotoSebelum = req.files['foto_sebelum'][0].filename;
-            const fotoSesudah = req.files['foto_sesudah'][0].filename;
+            //! foto hanya diambil kalau ada (Piket), kalau g pike foto null
+            const fotoSebelum = req.files?.['foto_sebelum']?.[0]?.filename || null;
+            const fotoSesudah = req.files?.['foto_sesudah']?.[0]?.filename || null;
 
             //! { transaction: t } — query ini masuk dalam sesi transaction
             //! kalau query berikutnya gagal, ini ikut di-rollback
@@ -202,13 +205,20 @@ module.exports = {
             const { page, limit, status } = req.query;
             const offset = (Number(page) - 1) * Number(limit);
 
+            //! kalau psrayon, filter submission hanya dari murid di rayon yang sama
+            // kalau administrator, ambil semua submission tanpa filter rayon
+            const rayonFilter = req.user.rayon_id ? { rayon_id: req.user.rayon_id } : {};
+
             const { count, rows } = await Submission.findAndCountAll({
                 where: status ? { status } : {},
                 offset: Number(offset),
                 limit: Number(limit),
-                //! include dengan object, bisa tambah opsi seperti attributes
                 include: [
-                    { model: User, attributes: { exclude: ['password'] } },
+                    {
+                        model: User,
+                        attributes: { exclude: ['password'] },
+                        where: rayonFilter.rayon_id ? { rayon_id: rayonFilter.rayon_id } : undefined
+                    },
                     { model: JenisPekerjaan }
                 ],
                 order: [['createdAt', 'DESC']]

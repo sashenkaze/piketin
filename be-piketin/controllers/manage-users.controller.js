@@ -97,7 +97,7 @@ module.exports = {
                     role: roleFilter,
                     ...(name ? { name: { [Op.like]: `%${name}%` } } : {})
                 },
-                include: [{ model: Rayon }], // tampilkan data rayon untuk [srayon]
+                include: [{ model: Rayon }], // tampilkan data rayon untuk psrayon
                 order: sortBy && order ? [[sortBy, order]] : [],
                 offset: Number(offset),
                 limit: Number(limit),

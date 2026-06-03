@@ -193,15 +193,16 @@ export default function ManageSubmissionPiket() {
                 headers: { Authorization: token }
             });
             if (!res.ok) throw new Error("Gagal export");
+            // blob: binary large obj
             const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
+            const url = window.URL.createObjectURL(blob); // buat url palsu
+            const a = document.createElement('a'); // bkin tag a html dr js
+            a.href = url; // masukin url td ke href
             a.download = 'histori-submission.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
+            document.body.appendChild(a); // tempel link ke page html
+            a.click(); // autoclick
+            a.remove(); 
+            window.URL.revokeObjectURL(url); // bersihin memori dr url td
         } catch (err) {
             alert("Gagal mengexport data");
         } finally {

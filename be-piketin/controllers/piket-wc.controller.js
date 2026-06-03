@@ -22,7 +22,6 @@ const getWeekNumber = (date) => {
 module.exports = {
 
     //! endpoint stats dashboard kokurikuler
-    // endpoint: GET /piket-wc/dashboard-stats
     // return: { stats, murid_minggu_bukan_hari_ini, murid_hari_ini, pending_submissions }
     getKokurikulerDashboard: async (req, res) => {
         try {
@@ -41,16 +40,16 @@ module.exports = {
                 attributes: ['id', 'name', 'nis', 'hari_wc', 'minggu_ke', 'tugas_wc'],
             });
 
-            //! filter murid yang terjadwal minggu ini (minggu_ke sesuai siklus sekarang)
+            //! filter murid yang terjadwal minggu ini sesuai siklus
             const muridMingguIni = semuaMurid.filter(u => u.minggu_ke === minggukeSiklus);
 
             //! filter murid yang terjadwal hari ini DAN minggu ini
             const muridHariIni = muridMingguIni.filter(u => u.hari_wc === hariIni);
 
-            //! murid minggu ini tapi bukan hari ini
+            //! murid minggu ini tp bukan hari ini
             const muridMingguBukanHariIni = muridMingguIni.filter(u => u.hari_wc !== hariIni);
 
-            //! ambil submission WC yang masih Pending — perlu perhatian kokurikuler
+            //! ambil submission wc yg masih pending
             const pendingSubmissions = await SubmissionWc.findAll({
                 where: { status: 'Pending' },
                 include: [{ model: User, as: 'User', attributes: ['id', 'name', 'nis'] }],
@@ -74,10 +73,6 @@ module.exports = {
     },
 
     //! stats piket WC minggu ini untuk chart kanan dashboard psrayon
-    // endpoint: GET /piket-wc/stats-rayon
-    // return: { sudah_wc, belum_wc, total } — murid di rayon psrayon yang terjadwal minggu ini
-    // "terjadwal minggu ini" = minggu_ke murid sesuai siklus minggu sekarang
-    // per murid hanya dihitung submission terbaru — kalau decline lalu submit ulang, tidak double-count
     getWcStatsByRayon: async (req, res) => {
         try {
             const rayonId = req.user.rayon_id;
@@ -134,10 +129,6 @@ module.exports = {
     },
 
     //! endpoint baru: hitung jumlah submission WC per status untuk dashboard admin
-    // sama seperti getUserStats di manage-users — pakai Promise.all supaya 3 query jalan paralel
-    // filter: minggu ini saja (bukan semua data historis)
-    // PENTING: per user hanya dihitung submission TERBARU — kalau decline lalu submit ulang,
-    //          yang lama (Declined) diabaikan, yang baru (Pending) yang dihitung
     getWcStats: async (req, res) => {
         try {
             //! hitung range minggu ini: Senin s/d Minggu
@@ -170,7 +161,7 @@ module.exports = {
                         user_id: murid.id,
                         tanggal_piket: { [Op.between]: [startOfWeek, endOfWeek] }
                     },
-                    order: [['createdAt', 'DESC']], //* ambil yang paling baru
+                    order: [['createdAt', 'DESC']], // ambil yang paling baru
                 });
                 if (!latest) continue; //* belum submit minggu ini, skip
                 if (latest.status === 'Pending') pending++;

@@ -215,7 +215,7 @@ export default function LoginPage() {
                         <p className="text-sm text-gray-500 font-medium">
                             Don't have an account?{" "}
                             <text className="font-bold text-green-600 hover:text-green-800 underline underline-offset-4 decoration-2 decoration-green-100 hover:decoration-green-300 transition-all">
-                                Ur chopped
+                                Contact Admin/PS Rayon!
                             </text>
                         </p>
                     </div>

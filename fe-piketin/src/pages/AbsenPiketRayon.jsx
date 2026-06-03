@@ -188,8 +188,13 @@ export default function AbsenPiketRayon() {
     //! submit absen piket rayon
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!fotoSebelum || !fotoSesudah) { setErrorMsg("Foto sebelum dan sesudah wajib diupload."); setSubmitResult('error'); return; }
-        if (selectedPekerjaan.length === 0) { setErrorMsg("Pilih minimal 1 jenis pekerjaan."); setSubmitResult('error'); return; }
+        const tidakPiket = formData.status_piket === 'Tidak Piket';
+
+        //* kalau Piket, foto dan pekerjaan wajib. kalau Tidak Piket, skip validasi keduanya
+        if (!tidakPiket) {
+            if (!fotoSebelum || !fotoSesudah) { setErrorMsg("Foto sebelum dan sesudah wajib diupload."); setSubmitResult('error'); return; }
+            if (selectedPekerjaan.length === 0) { setErrorMsg("Pilih minimal 1 jenis pekerjaan."); setSubmitResult('error'); return; }
+        }
 
         setLoading(true);
         setSubmitResult(null);
@@ -197,11 +202,20 @@ export default function AbsenPiketRayon() {
             const token = localStorage.getItem("token");
             const fd = new FormData();
             fd.append('status_piket', formData.status_piket);
-            fd.append('kondisi', formData.kondisi);
             if (formData.catatan) fd.append('catatan', formData.catatan);
-            fd.append('foto_sebelum', fotoSebelum);
-            fd.append('foto_sesudah', fotoSesudah);
-            selectedPekerjaan.forEach(id => fd.append('pekerjaan_ids', id));
+
+            //* kalau Piket, append kondisi, foto, dan pekerjaan. kalau Tidak Piket, skip
+            if (!tidakPiket) {
+                fd.append('kondisi', formData.kondisi);
+                fd.append('foto_sebelum', fotoSebelum);
+                fd.append('foto_sesudah', fotoSesudah);
+                selectedPekerjaan.forEach(id => fd.append('pekerjaan_ids', id));
+            } else {
+                //! backend tetap butuh kondisi dan foto — kirim placeholder kalau Tidak Piket
+                // backend validasi kondisi dan foto wajib ada, tapi untuk Tidak Piket
+                // kita kirim nilai default supaya tidak error di validasi
+                fd.append('kondisi', 'Kurang');
+            }
 
             const res = await fetch('http://localhost:3000/submissions', {
                 method: 'POST',
@@ -289,6 +303,7 @@ export default function AbsenPiketRayon() {
                                 </div>
                             )}
 
+                            {/* ── Status Piket ── */}
                             <div className="space-y-1.5">
                                 <label className="text-sm font-bold text-gray-700 ml-1">Status Piket</label>
                                 <select name="status_piket" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-600 outline-none transition-all text-sm" value={formData.status_piket} onChange={handleChange}>
@@ -298,52 +313,94 @@ export default function AbsenPiketRayon() {
                                 </select>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Kondisi Kebersihan</label>
-                                <select name="kondisi" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-600 outline-none transition-all text-sm" value={formData.kondisi} onChange={handleChange}>
-                                    <option value="">-- Pilih Kondisi --</option>
-                                    <option value="Bersih dan Rapi">Bersih dan Rapi</option>
-                                    <option value="Bersih">Bersih</option>
-                                    <option value="Kurang">Kurang</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Pekerjaan yang Dilakukan <span className="text-gray-400 font-normal">(pilih semua yang sesuai)</span></label>
-                                {jpLoading ? (
-                                    <div className="flex items-center gap-2 text-gray-400 text-sm p-3"><Loader2 size={16} className="animate-spin" />Memuat daftar pekerjaan...</div>
-                                ) : jenisPekerjaanList.length === 0 ? (
-                                    <p className="text-gray-400 text-sm p-3">Belum ada jenis pekerjaan. Hubungi PS Rayon kamu.</p>
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {jenisPekerjaanList.map(jp => (
-                                            <label key={jp.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedPekerjaan.includes(jp.id) ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-green-300'}`}>
-                                                <input type="checkbox" className="hidden" checked={selectedPekerjaan.includes(jp.id)} onChange={() => togglePekerjaan(jp.id)} />
-                                                <CheckSquare size={18} className={selectedPekerjaan.includes(jp.id) ? 'text-green-600' : 'text-gray-300'} />
-                                                <span className="text-sm font-medium">{jp.nama_pekerjaan}</span>
+                            {/*
+                             * kalau "Tidak Piket" dipilih:
+                             * - kondisi, pekerjaan, foto sebelum/sesudah di-disable dan diberi opacity rendah
+                             * - catatan menjadi wajib (required)
+                             * catatan: disabled tidak reset value, tapi backend tidak akan butuh field ini
+                             */}
+                            {(() => {
+                                const tidakPiket = formData.status_piket === 'Tidak Piket';
+                                return (
+                                    <>
+                                        {/* ── Kondisi Kebersihan — disabled kalau Tidak Piket ── */}
+                                        <div className={`space-y-1.5 transition-opacity ${tidakPiket ? 'opacity-40 pointer-events-none' : ''}`}>
+                                            <label className="text-sm font-bold text-gray-700 ml-1">
+                                                Kondisi Kebersihan
+                                                {tidakPiket && <span className="text-xs text-gray-400 font-normal ml-1">(tidak diperlukan)</span>}
                                             </label>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                                            <select name="kondisi" required={!tidakPiket} disabled={tidakPiket} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-600 outline-none transition-all text-sm disabled:cursor-not-allowed" value={tidakPiket ? '' : formData.kondisi} onChange={handleChange}>
+                                                <option value="">-- Pilih Kondisi --</option>
+                                                <option value="Bersih dan Rapi">Bersih dan Rapi</option>
+                                                <option value="Bersih">Bersih</option>
+                                                <option value="Kurang">Kurang</option>
+                                            </select>
+                                        </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Catatan <span className="text-gray-400 font-normal">(opsional)</span></label>
-                                <textarea name="catatan" rows={3} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-600 outline-none transition-all text-sm resize-none" placeholder="Tambahkan catatan jika ada..." value={formData.catatan} onChange={handleChange} />
-                            </div>
+                                        {/* ── Pekerjaan — disabled kalau Tidak Piket ── */}
+                                        <div className={`space-y-2 transition-opacity ${tidakPiket ? 'opacity-40 pointer-events-none' : ''}`}>
+                                            <label className="text-sm font-bold text-gray-700 ml-1">
+                                                Pekerjaan yang Dilakukan
+                                                {tidakPiket
+                                                    ? <span className="text-xs text-gray-400 font-normal ml-1">(tidak diperlukan)</span>
+                                                    : <span className="text-gray-400 font-normal ml-1">(pilih semua yang sesuai)</span>
+                                                }
+                                            </label>
+                                            {jpLoading ? (
+                                                <div className="flex items-center gap-2 text-gray-400 text-sm p-3"><Loader2 size={16} className="animate-spin" />Memuat daftar pekerjaan...</div>
+                                            ) : jenisPekerjaanList.length === 0 ? (
+                                                <p className="text-gray-400 text-sm p-3">Belum ada jenis pekerjaan. Hubungi PS Rayon kamu.</p>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    {jenisPekerjaanList.map(jp => (
+                                                        <label key={jp.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${tidakPiket ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400' : selectedPekerjaan.includes(jp.id) ? 'cursor-pointer border-green-500 bg-green-50 text-green-700' : 'cursor-pointer border-gray-200 bg-gray-50 text-gray-700 hover:border-green-300'}`}>
+                                                            <input type="checkbox" className="hidden" checked={!tidakPiket && selectedPekerjaan.includes(jp.id)} onChange={() => !tidakPiket && togglePekerjaan(jp.id)} />
+                                                            <CheckSquare size={18} className={!tidakPiket && selectedPekerjaan.includes(jp.id) ? 'text-green-600' : 'text-gray-300'} />
+                                                            <span className="text-sm font-medium">{jp.nama_pekerjaan}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {[{ label: 'Foto Sebelum', state: fotoSebelum, setter: setFotoSebelum }, { label: 'Foto Sesudah', state: fotoSesudah, setter: setFotoSesudah }].map(({ label, state, setter }) => (
-                                    <div key={label} className="space-y-1.5">
-                                        <label className="text-sm font-bold text-gray-700 ml-1">{label}</label>
-                                        <label className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${state ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-green-300'}`}>
-                                            <Upload size={24} className={state ? 'text-green-600' : 'text-gray-400'} />
-                                            <span className="text-xs font-medium text-center text-gray-500">{state ? state.name : `Klik untuk upload ${label.toLowerCase()}`}</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => setter(e.target.files[0])} />
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
+                                        {/* ── Catatan — wajib kalau Tidak Piket, opsional kalau Piket ── */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-bold text-gray-700 ml-1">
+                                                Catatan{' '}
+                                                {tidakPiket
+                                                    ? <span className="text-red-500">*</span>
+                                                    : <span className="text-gray-400 font-normal">(opsional)</span>
+                                                }
+                                            </label>
+                                            <textarea
+                                                name="catatan" rows={3}
+                                                required={tidakPiket}
+                                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-600 outline-none transition-all text-sm resize-none"
+                                                placeholder={tidakPiket ? 'Wajib isi alasan tidak piket...' : 'Tambahkan catatan jika ada...'}
+                                                value={formData.catatan}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+
+                                        {/* ── Foto — disabled kalau Tidak Piket ── */}
+                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 transition-opacity ${tidakPiket ? 'opacity-40 pointer-events-none' : ''}`}>
+                                            {[{ label: 'Foto Sebelum', state: fotoSebelum, setter: setFotoSebelum }, { label: 'Foto Sesudah', state: fotoSesudah, setter: setFotoSesudah }].map(({ label, state, setter }) => (
+                                                <div key={label} className="space-y-1.5">
+                                                    <label className="text-sm font-bold text-gray-700 ml-1">
+                                                        {label}
+                                                        {tidakPiket && <span className="text-xs text-gray-400 font-normal ml-1">(tidak diperlukan)</span>}
+                                                    </label>
+                                                    <label className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition-all ${tidakPiket ? 'cursor-not-allowed border-gray-200 bg-gray-50' : state ? 'cursor-pointer border-green-400 bg-green-50' : 'cursor-pointer border-gray-200 bg-gray-50 hover:border-green-300'}`}>
+                                                        <Upload size={24} className={state && !tidakPiket ? 'text-green-600' : 'text-gray-400'} />
+                                                        <span className="text-xs font-medium text-center text-gray-500">{state && !tidakPiket ? state.name : tidakPiket ? 'Tidak diperlukan' : `Klik untuk upload ${label.toLowerCase()}`}</span>
+                                                        {!tidakPiket && <input type="file" accept="image/*" className="hidden" onChange={(e) => setter(e.target.files[0])} />}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                );
+                            })()}
 
                             <button type="submit" disabled={loading} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-green-100 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70">
                                 {loading ? <><Loader2 size={18} className="animate-spin" />Mengirim...</> : <><ClipboardCheck size={18} />Kirim Absen</>}

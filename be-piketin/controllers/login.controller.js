@@ -26,7 +26,7 @@ module.exports = {
             }
             // cek apakah email tsb ada di table user
             const user = await User.findOne({ where: { email: email } });
-            //* finOne : mencari 1 data bukan berdasarkan PK
+            //* findOne : mencari 1 data, bukan berdasarkan PK
             if (!user) {
                 return res.status(400).json(response(400, "Validasi Error", "Email not found, try again!"));
             }
