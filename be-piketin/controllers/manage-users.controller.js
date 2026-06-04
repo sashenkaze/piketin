@@ -180,7 +180,6 @@ module.exports = {
 
     //! export daftar psrayon & kokurikuler ke excel — untuk admin
     // query param role opsional: kalau ada, filter by role. kalau tidak ada, export semua
-    // kolom: id, nama, email, role, nama rayon (kalau psrayon)
     exportManagedUsers: async (req, res) => {
         try {
             const { role } = req.query;
